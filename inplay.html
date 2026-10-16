@@ -184,7 +184,7 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
 <footer id="foot">FTS &middot; in-play board &middot; live stats: SofaScore (unofficial) &middot; prices: your Betfair in-play log</footer>
 
 <script>
-window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "1.1"};
+window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "1.2"};
 (function(){
 'use strict';
 var CFG = window.__BOARD || {};
@@ -313,7 +313,7 @@ function scoreCell(g){
 }
 function pairCell(g, k, sub, i, dec){
   var v = g[k], sv = g[sub];
-  if(!v) return '<span class="muted">&ndash;</span>';
+  if(!v) return '<span class="muted"'+(k==='xg' && g.ssrc==='ls' ? ' title="xG comes from SofaScore, which isn\'t available for this game right now"' : '')+'>&ndash;</span>';
   return '<div class="big num">'+(dec ? f2(v[i]) : f0(v[i]))+'</div>'+(sv ? '<div class="sm num">'+(dec ? f2(sv[i]) : f0(sv[i]))+'</div>' : '');
 }
 function priceCell(g, k){
@@ -367,6 +367,7 @@ function detail(g){
   if(g.off) kv.push(['At the off H/D/A', [g.off.h,g.off.d,g.off.a].map(pr).join(' / ')]);
   if(g.px) kv.push(['Now H/D/A', [g.px.h,g.px.d,g.px.a].map(pr).join(' / ') + (g.px.age!=null ? ' <span class="muted">('+Math.round(g.px.age/60)+' min old)</span>' : '')]);
   if(g.card) kv.push(['On the Trading Card', esc(g.card)]);
+  if(g.ssrc==='ls' || g.msrc==='ls') kv.push(['Live data from', 'LiveScore <span class="muted">(SofaScore unavailable: no xG or momentum)</span>']);
   if(g.sn) kv.push(['SofaScore', esc(g.sn[0])+' v '+esc(g.sn[1]) + (g.url ? ' &middot; <a href="'+esc(g.url)+'" target="_blank" rel="noopener">open</a>' : '')]);
   if(g.sat) kv.push(['Stats updated', new Date(g.sat*1000).toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'})]);
   return '<div class="detgrid"><div><p class="dh">Momentum</p>'+mom+
@@ -433,7 +434,12 @@ function render(){
   var w = [];
   if(live && age > 360) w.push('Data '+Math.round(age/60)+' min old &ndash; is the VM collector running?');
   if(!live && age > 1800) w.push('No update for '+Math.round(age/60)+' min &ndash; is the VM collector running?');
-  if(b.feed_ok === false) w.push('SofaScore not responding &ndash; showing the last stats');
+  if(b.feed_ok === false){
+    var lsN = gs.filter(function(g){ return g.msrc==='ls' || g.ssrc==='ls'; }).length;
+    var code = b.src && b.src.feed_http ? ' (HTTP '+esc(b.src.feed_http)+')' : '';
+    w.push(lsN ? 'SofaScore is refusing the VM'+code+' &ndash; minute, score and shots from LiveScore; no xG or momentum until it&rsquo;s back'
+               : 'SofaScore not responding'+code+' &ndash; showing the last stats');
+  }
   $('warn').innerHTML = w.map(function(t){ return '<span class="pill warn">'+t+'</span>'; }).join(' ');
   // league list
   var sel = $('league'), cur = UI.lg, lgs = {};
