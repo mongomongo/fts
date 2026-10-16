@@ -176,7 +176,7 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
     <li><b>xG H / xG A</b>: live expected goals for each side (big), with expected goals on target underneath (small). xG on target only counts shots that hit the target, weighted by where they were going, so it shows how hard each keeper is being worked.</li>
     <li><b>Momentum</b>: SofaScore attack momentum, one bar a minute. Blue above the line is home pressure, orange below is away. The faint line marks half-time.</li>
     <li><b>Shots</b>: total shots (big) and shots on target (small).</li>
-    <li><b>Home / Draw / Away</b>: Betfair back prices from your in-play price log (small: the price at the off, or 7am). <b>Goals</b>: the Over line just above the current score, plus first-half Over 0.5 in the first half.</li>
+    <li><b>Home / Draw / Away</b>: Betfair back prices. Until about 12 minutes before kick-off the only price is the 7am one, shown with &ldquo;7am price&rdquo; under it. From then on the top number is the latest price from your in-play price log, and the small number underneath is the 7am price or, once the game has started, the price at the off, so you can see how far it has moved. <b>Goals</b>: the Over line just above the current score, plus first-half Over 0.5 in the first half.</li>
     <li><b>Flags</b> are rules of thumb, not tested yet: <b>Fav behind, on top</b> = the favourite is losing after 15' but leads xG by 0.4+ (or shots by 4+) and isn't behind on shots on target. <b>xG &gt; goals</b> = after 20', total xG is at least 0.9 more than the goals scored. <b>Quiet</b> = after 30', total xG under 0.35 and at most one shot on target.</li>
     <li>xG and xG on target are only available in leagues where SofaScore has them (most main European leagues, Brazil, MLS...). Elsewhere you still get shots, shots on target and momentum.</li>
   </ul>
@@ -184,7 +184,7 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
 <footer id="foot">FTS &middot; in-play board &middot; live stats: SofaScore (unofficial) &middot; prices: your Betfair in-play log</footer>
 
 <script>
-window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "1.0"};
+window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "1.1"};
 (function(){
 'use strict';
 var CFG = window.__BOARD || {};
@@ -232,7 +232,7 @@ function load(){
       return b;
     });
   } else { p = Promise.resolve(null); }
-  return p.then(function(b){ if(b && b.games){ BOARD = b; } render(); });
+  return p.then(function(b){ if(b && b.games){ BOARD = b; CHECKED = nowS(); } render(); });
 }
 
 // ---------------------------------------------------------------- flags (rules of thumb)
@@ -317,10 +317,12 @@ function pairCell(g, k, sub, i, dec){
   return '<div class="big num">'+(dec ? f2(v[i]) : f0(v[i]))+'</div>'+(sv ? '<div class="sm num">'+(dec ? f2(sv[i]) : f0(sv[i]))+'</div>' : '');
 }
 function priceCell(g, k){
-  var live = g.px && g.px[k], ref = (g.off && g.off[k]) ? ['off', g.off[k]] : (g.p7 && g.p7[k]) ? ['7am', g.p7[k]] : null;
+  var live = g.px && g.px[k], ref = (g.off && g.off[k]) ? ['at off', g.off[k]] : (g.p7 && g.p7[k]) ? ['7am', g.p7[k]] : null;
   if(!live && !ref) return '<span class="muted">&ndash;</span>';
-  if(live) return '<div class="big num">'+pr(live)+'</div>'+(ref ? '<div class="sm num">'+ref[0]+' '+pr(ref[1])+'</div>' : '');
-  return '<div class="num muted">'+pr(ref[1])+'</div><div class="sm">'+ref[0]+'</div>';
+  // live/latest Betfair price on top, with the price at the off (or 7am) underneath to compare
+  if(live) return '<div class="big num" title="Betfair back now">'+pr(live)+'</div>'+(ref ? '<div class="sm num" title="'+(ref[0]==='at off'?'Betfair back price at the off':'Betfair back price at 7am')+'">'+ref[0]+' '+pr(ref[1])+'</div>' : '');
+  // no live price yet (more than ~12 min before kick-off): the number IS the 7am / at-off price
+  return '<div class="num" title="Betfair back price '+(ref[0]==='7am'?'at 7am':'at the off')+'">'+pr(ref[1])+'</div><div class="sm">'+(ref[0]==='7am'?'7am price':'price at off')+'</div>';
 }
 function goalsCell(g){
   var ln = g.ln || {}, out = [];
@@ -366,7 +368,7 @@ function detail(g){
   if(g.px) kv.push(['Now H/D/A', [g.px.h,g.px.d,g.px.a].map(pr).join(' / ') + (g.px.age!=null ? ' <span class="muted">('+Math.round(g.px.age/60)+' min old)</span>' : '')]);
   if(g.card) kv.push(['On the Trading Card', esc(g.card)]);
   if(g.sn) kv.push(['SofaScore', esc(g.sn[0])+' v '+esc(g.sn[1]) + (g.url ? ' &middot; <a href="'+esc(g.url)+'" target="_blank" rel="noopener">open</a>' : '')]);
-  if(g.sat) kv.push(['Stats updated', new Date(g.sat*1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})]);
+  if(g.sat) kv.push(['Stats updated', new Date(g.sat*1000).toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'})]);
   return '<div class="detgrid"><div><p class="dh">Momentum</p>'+mom+
     (bars ? '<p class="dh" style="margin-top:12px">'+esc(g.h)+' v '+esc(g.a)+'</p><div class="bars">'+bars+'</div>' : '')+
     '</div><div><p class="dh">Game</p><div class="kv">'+kv.map(function(p){ return '<span>'+p[0]+'</span><b class="num">'+p[1]+'</b>'; }).join('')+'</div></div></div>';
@@ -408,16 +410,29 @@ function filtered(){
     return a.kt-b.kt;
   });
 }
+var CHECKED = 0;
+function hm(t){ return new Date(t*1000).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}); }
+function updText(){
+  if(!BOARD) return;
+  var age = Math.max(0, nowS() - BOARD.generated);
+  $('upd').textContent = 'data ' + (age < 90 ? Math.round(age)+'s' : Math.round(age/60)+' min') + ' old' +
+    (CHECKED ? ' \u00b7 checked ' + new Date(CHECKED*1000).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit', second:'2-digit'}) : '');
+  $('upd').title = 'The VM last published at ' + hm(BOARD.generated) + '. With nothing in play it only re-publishes every 15 min, so the time doesn\'t move between kick-offs.';
+}
 function render(){
   var b = BOARD;
   if(!b){ $('upd').textContent = CFG.raw || new URLSearchParams(location.search).get('src') ? 'waiting for data…' : 'not configured'; return; }
   var gs = b.games || [];
   var live = gs.filter(isLive).length, up = gs.filter(function(g){ return g.st==='ns'; }).length, fin = gs.filter(isFin).length;
-  $('counts').innerHTML = '<b>'+live+'</b> live &middot; <b>'+up+'</b> to come &middot; <b>'+fin+'</b> finished';
+  var nxt = gs.filter(function(g){ return g.st==='ns' && g.kt > nowS(); }).sort(function(a,b){ return a.kt-b.kt; })[0];
+  var nxtTxt = '';
+  if(!live && nxt){ var mins = Math.round((nxt.kt - nowS())/60); nxtTxt = ' &middot; nothing in play, next kick-off <b>'+esc(nxt.ko)+'</b> (in '+(mins >= 60 ? Math.floor(mins/60)+'h '+(mins%60)+'m' : mins+'m')+')'; }
+  $('counts').innerHTML = '<b>'+live+'</b> live &middot; <b>'+up+'</b> to come &middot; <b>'+fin+'</b> finished' + nxtTxt;
   var age = Math.max(0, nowS() - b.generated);
-  $('upd').textContent = 'updated ' + (age < 90 ? Math.round(age)+'s' : Math.round(age/60)+' min') + ' ago';
+  updText();
   var w = [];
   if(live && age > 360) w.push('Data '+Math.round(age/60)+' min old &ndash; is the VM collector running?');
+  if(!live && age > 1800) w.push('No update for '+Math.round(age/60)+' min &ndash; is the VM collector running?');
   if(b.feed_ok === false) w.push('SofaScore not responding &ndash; showing the last stats');
   $('warn').innerHTML = w.map(function(t){ return '<span class="pill warn">'+t+'</span>'; }).join(' ');
   // league list
@@ -473,7 +488,10 @@ function toggle(e){
 }
 $('tb').addEventListener('click', toggle);
 $('cards').addEventListener('click', toggle);
-$('refresh').addEventListener('click', function(){ load(); });
+$('refresh').addEventListener('click', function(){
+  var btn = this; btn.disabled = true; btn.textContent = '\u2026';
+  load().then(function(){ btn.disabled = false; btn.innerHTML = '&#8635;'; });
+});
 $('theme').addEventListener('click', function(){
   var light = document.documentElement.getAttribute('data-theme') === 'light';
   if(light){ document.documentElement.removeAttribute('data-theme'); ls('ipb.theme','dark'); }
@@ -481,7 +499,7 @@ $('theme').addEventListener('click', function(){
 });
 document.addEventListener('visibilitychange', function(){ if(!document.hidden) load(); });
 setInterval(function(){ if(!document.hidden) load(); }, 60000);
-setInterval(function(){ if(BOARD && !document.hidden){ var age = Math.max(0, nowS() - BOARD.generated); $('upd').textContent = 'updated ' + (age < 90 ? Math.round(age)+'s' : Math.round(age/60)+' min') + ' ago'; } }, 15000);
+setInterval(function(){ if(BOARD && !document.hidden){ updText(); } }, 15000);
 var rz; window.addEventListener('resize', function(){ clearTimeout(rz); rz = setTimeout(render, 200); });
 load();
 })();
