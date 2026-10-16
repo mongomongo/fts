@@ -13,6 +13,7 @@
   --flag-fav:#3fb950;--flag-fav-bg:rgba(63,185,80,.14);--flag-busy:#d29922;--flag-busy-bg:rgba(210,153,34,.15);
   --flag-quiet:#8b949e;--flag-quiet-bg:rgba(139,148,158,.15);--warn:#d29922;--warn-bg:rgba(210,153,34,.14);
   --chip:#2a2b30;--chip-on:#ececea;--chip-on-ink:#111214;--grid:#2c2d31;--base:#4a4b50;
+  --vpos:63,185,80;--vneg:229,72,77;--flag-val:#3fb950;--flag-val-bg:rgba(63,185,80,.18);
   color-scheme:dark;
 }
 :root[data-theme="light"]{
@@ -22,6 +23,7 @@
   --flag-fav:#1a7f37;--flag-fav-bg:rgba(26,127,55,.10);--flag-busy:#9a6700;--flag-busy-bg:rgba(154,103,0,.10);
   --flag-quiet:#57606a;--flag-quiet-bg:rgba(87,96,106,.10);--warn:#9a6700;--warn-bg:rgba(154,103,0,.10);
   --chip:#ebebe7;--chip-on:#151513;--chip-on-ink:#ffffff;--grid:#e4e3de;--base:#c3c2b7;
+  --vpos:26,127,55;--vneg:201,48,44;--flag-val:#1a7f37;--flag-val-bg:rgba(26,127,55,.12);
   color-scheme:light;
 }
 *{box-sizing:border-box}
@@ -48,7 +50,7 @@ button:hover{border-color:var(--ink3)}
 .ck{display:inline-flex;align-items:center;gap:6px;color:var(--ink2);font-size:13px;cursor:pointer}
 input[type=search]{min-width:150px}
 .wrap{overflow-x:auto;margin-top:8px}
-table{border-collapse:collapse;width:100%;min-width:1180px}
+table{border-collapse:collapse;width:100%;min-width:1240px}
 th{font-size:11px;font-weight:600;color:var(--ink3);text-transform:none;text-align:center;padding:8px 6px;border-bottom:1px solid var(--line);white-space:nowrap;position:sticky;top:0;background:var(--bg)}
 th.l,td.l{text-align:left}
 td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:center;vertical-align:middle}
@@ -77,6 +79,16 @@ tr.g.fin td{opacity:.62}
 .fl.fav{background:var(--flag-fav-bg);color:var(--flag-fav)}
 .fl.busy{background:var(--flag-busy-bg);color:var(--flag-busy)}
 .fl.quiet{background:var(--flag-quiet-bg);color:var(--flag-quiet)}
+.fl.val{background:var(--flag-val-bg);color:var(--flag-val)}
+.sq{display:inline-block;min-width:48px;padding:3px 4px 2px;border-radius:6px;border:1px solid var(--line);line-height:1.15;vertical-align:middle}
+.sq .sf{font-size:14px;font-weight:600}
+.sq .sb{font-size:11.5px;color:var(--ink2)}
+.sq .sl{font-size:10px;color:inherit;opacity:.78;display:block;margin-bottom:1px}
+.sq.old .sb{text-decoration:line-through;color:var(--ink3)}
+.sqs{display:inline-flex;gap:4px;align-items:flex-end}
+.vt{width:100%;max-width:440px;border-collapse:collapse;font-size:12.5px;min-width:0}
+.vt td,.vt th{padding:3px 6px;border-bottom:1px solid var(--line);text-align:right;position:static;background:none}
+.vt td:first-child,.vt th:first-child{text-align:left}
 .muted{color:var(--ink3)}
 .det td{background:var(--panel);padding:12px 14px 16px;text-align:left;cursor:default}
 .detgrid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:22px}
@@ -120,7 +132,7 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
   .c5 b{color:var(--ink)}
   .detgrid{grid-template-columns:1fr}
   .card .det{margin-top:10px;border-top:1px solid var(--line);padding-top:10px}
-  input[type=search]{min-width:0;flex:1}
+  input[type=search]{min-width:140px;flex:1}
 }
 </style>
 </head>
@@ -149,11 +161,17 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
       <option value="xgt">Sort: total xG</option>
       <option value="xgd">Sort: xG gap</option>
       <option value="flags">Sort: flags first</option>
+      <option value="val">Sort: best value</option>
+    </select>
+    <select id="val" aria-label="Value filter" title="Value squares: our fair price against Betfair">
+      <option value="">Value: show all</option>
+      <option value="5">Any square 5%+ value</option>
+      <option value="ian">Ian&rsquo;s goals rule</option>
     </select>
     <label class="ck"><input type="checkbox" id="flagsOnly"> Flagged only</label>
     <input type="search" id="q" placeholder="Team or league" aria-label="Search">
   </div>
-  <div class="legend"><span><span class="sw" style="background:var(--home)"></span>Home pressure</span><span><span class="sw" style="background:var(--away)"></span>Away pressure</span><span class="muted">Big number = xG / shots &middot; small = on target &middot; bold team = favourite at the off</span></div>
+  <div class="legend"><span><span class="sw" style="background:var(--home)"></span>Home pressure</span><span><span class="sw" style="background:var(--away)"></span>Away pressure</span><span><span class="sw" style="background:rgba(var(--vpos),.6)"></span>value</span><span><span class="sw" style="background:rgba(var(--vneg),.6)"></span>no value</span><span class="muted">Squares: our fair price on top, Betfair below &middot; big number = xG / shots, small = on target &middot; bold team = favourite at the off</span></div>
 </header>
 
 <div class="wrap">
@@ -176,7 +194,11 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
     <li><b>xG H / xG A</b>: live expected goals for each side (big), with expected goals on target underneath (small). xG on target only counts shots that hit the target, weighted by where they were going, so it shows how hard each keeper is being worked.</li>
     <li><b>Momentum</b>: SofaScore attack momentum, one bar a minute. Blue above the line is home pressure, orange below is away. The faint line marks half-time.</li>
     <li><b>Shots</b>: total shots (big) and shots on target (small).</li>
-    <li><b>Home / Draw / Away</b>: Betfair back prices. Until about 12 minutes before kick-off the only price is the 7am one, shown with &ldquo;7am price&rdquo; under it. From then on the top number is the latest price from your in-play price log, and the small number underneath is the 7am price or, once the game has started, the price at the off, so you can see how far it has moved. <b>Goals</b>: the Over line just above the current score, plus first-half Over 0.5 in the first half.</li>
+    <li><b>Value squares</b> (games in play): the top number is <b>our fair price</b>, the bottom one the latest <b>Betfair</b> price from your in-play log. Value = (Betfair &minus; fair) &divide; Betfair &times; 100, the same sum as the FTS tool. <b>Green</b> = Betfair is bigger than our fair price (value backing), <b>red</b> = smaller; the deeper the colour, the bigger the gap. The <b>draw</b> square uses the <b>lay</b> price and is scored from the lay side (green = laying the draw is value). Goal squares show the next two Over lines (one more goal, two more goals), plus the first-half lines in the first half. A crossed-out Betfair price is more than 3 minutes old or was taken at a different score (just after a goal), so no value is worked out from it. Hover a square for the detail; click a game for the full table.</li>
+    <li><b>How our fair price is made</b>: each side's expected goals are fitted to the Betfair prices at the off (else the 7am prices, else NewModel xG). Then every remaining minute is played out with how goals really arrive (more after half-time, lots in added time) and how the score changes things (the side behind late scores more). Red cards and live xG adjust it. It is fitted and checked on FTS's results file: 47,924 games since 2021.</li>
+    <li><b>How much to trust it</b>: on 10,433 games from this season (not used to fit it), Betfair's half-time prices were slightly more accurate than ours. Backing every green goal square at half-time made no reliable profit. So a few % of value is mostly noise. The squares show where we and the market disagree; whether that's an edge has to be proven. Every reading is saved so we can test it on our own games (for example: value <em>and</em> a lively game).</li>
+    <li><b>&#9733; Goals value</b> flag (and the <em>Ian&rsquo;s goals rule</em> filter): both goal squares green, and one of them at least 5% value at a Betfair price of 1.7 or more. These are Ian&rsquo;s rules from his live streams; he also picks his moments (around 25&prime;, 55&ndash;65&prime;).</li>
+    <li><b>Home / Draw / Away</b> (before kick-off): Betfair back prices. Until about 12 minutes before kick-off the only price is the 7am one, shown with &ldquo;7am price&rdquo; under it. From then on the top number is the latest price from your in-play price log, and the small number underneath is the 7am price or, once the game has started, the price at the off, so you can see how far it has moved. <b>Goals</b>: the Over line just above the current score, plus first-half Over 0.5 in the first half.</li>
     <li><b>Flags</b> are rules of thumb, not tested yet: <b>Fav behind, on top</b> = the favourite is losing after 15' but leads xG by 0.4+ (or shots by 4+) and isn't behind on shots on target. <b>xG &gt; goals</b> = after 20', total xG is at least 0.9 more than the goals scored. <b>Quiet</b> = after 30', total xG under 0.35 and at most one shot on target.</li>
     <li>xG and xG on target are only available in leagues where SofaScore has them (most main European leagues, Brazil, MLS...). Elsewhere you still get shots, shots on target and momentum.</li>
   </ul>
@@ -184,12 +206,12 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
 <footer id="foot">FTS &middot; in-play board &middot; live stats: SofaScore (unofficial) &middot; prices: your Betfair in-play log</footer>
 
 <script>
-window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "1.3"};
+window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "1.4"};
 (function(){
 'use strict';
 var CFG = window.__BOARD || {};
 var BOARD = null, lastApi = 0, OPEN = {}, timer = null;
-var UI = {f:'now', lg:'', sort:'ko', flagsOnly:false, q:''};
+var UI = {f:'now', lg:'', sort:'ko', flagsOnly:false, q:'', val:''};
 function ls(k,v){ try{ if(v===undefined){ return localStorage.getItem(k); } localStorage.setItem(k,v); }catch(e){ return null; } }
 try{ var s = JSON.parse(ls('ipb.ui')||'{}'); for(var k in s){ if(k in UI) UI[k]=s[k]; } }catch(e){}
 var th = ls('ipb.theme'); if(th==='light') document.documentElement.setAttribute('data-theme','light');
@@ -243,6 +265,7 @@ function load(){
 function flags(g){
   var out = [];
   if(!isLive(g)) return out;
+  if(g.vs && g.vs.ian) out.push(['val','\u2605 Goals value']);
   var m = g.min || (g.st==='ht' ? 45 : 0), sc = g.sc || [0,0];
   if(g.fav && m >= 15){
     var fi = g.fav==='h' ? 0 : 1, oi = 1 - fi;
@@ -320,7 +343,37 @@ function pairCell(g, k, sub, i, dec){
   if(!v) return '<span class="muted"'+(k==='xg' && g.ssrc==='ls' ? ' title="xG comes from SofaScore, which isn\'t available for this game right now"' : '')+'>&ndash;</span>';
   return '<div class="big num">'+(dec ? f2(v[i]) : f0(v[i]))+'</div>'+(sv ? '<div class="sm num">'+(dec ? f2(sv[i]) : f0(sv[i]))+'</div>' : '');
 }
+function lineLab(ln){
+  var m = /^(OU|FH)(\d)5$/.exec(ln||''); if(!m) return ln||'';
+  return (m[1]==='FH' ? 'FH ' : 'O') + m[2] + '.5';
+}
+function sqBg(v){
+  if(v==null) return '';
+  var a = (0.12 + 0.6*Math.min(Math.abs(v)/15, 1)).toFixed(2);
+  return 'background:rgba(var(--'+(v>=0?'vpos':'vneg')+'),'+a+');border-color:transparent';
+}
+function sqTip(g, k, e){
+  var names = {h:g.h+' to win', d:'the draw', a:g.a+' to win'};
+  var t = (names[k] || ('Over '+lineLab(e.ln).replace(/^O/,'').replace(/^FH /,'')+(e.ln && e.ln.slice(0,2)==='FH' ? ' first-half goals' : ' goals')));
+  t += '\nOur fair price '+pr(e.f)+' ('+e.p+'%)';
+  if(e.b) t += '\nBetfair '+(e.lay?'lay':'back')+' '+pr(e.b) + (e.old ? ' (old, or taken at another score: no value worked out)' : '');
+  if(e.v!=null) t += '\nValue '+(e.v>0?'+':'')+e.v+'%' + (e.lay ? ' (laying: green = Betfair lay is below our fair price)' : '');
+  if(!e.b) t += '\nNo Betfair price logged for this market right now';
+  if(g.off && g.off[k]) t += '\nAt the off '+pr(g.off[k]);
+  return t;
+}
+function square(g, k, lab){
+  var e = g.vs && g.vs.sq && g.vs.sq[k]; if(!e) return '';
+  return '<span class="sq num'+(e.old?' old':'')+'" style="'+sqBg(e.v)+'" title="'+esc(sqTip(g,k,e))+'">'+(lab?'<span class="sl">'+esc(lab)+'</span>':'')+
+    '<div class="sf">'+pr(e.f)+'</div><div class="sb">'+(e.b ? (e.lay?'L ':'')+pr(e.b) : '&ndash;')+'</div></span>';
+}
+function bestVal(g){
+  var best = null, sq = (g.vs && g.vs.sq) || {};
+  for(var k in sq){ if(sq[k].v!=null && (best==null || sq[k].v > best)) best = sq[k].v; }
+  return best;
+}
 function priceCell(g, k){
+  if(g.vs && g.vs.sq && g.vs.sq[k]) return square(g, k);
   var live = g.px && g.px[k], ref = (g.off && g.off[k]) ? ['at off', g.off[k]] : (g.p7 && g.p7[k]) ? ['7am', g.p7[k]] : null;
   if(!live && !ref) return '<span class="muted">&ndash;</span>';
   // live/latest Betfair price on top, with the price at the off (or 7am) underneath to compare
@@ -329,6 +382,10 @@ function priceCell(g, k){
   return '<div class="num" title="Betfair back price '+(ref[0]==='7am'?'at 7am':'at the off')+'">'+pr(ref[1])+'</div><div class="sm">'+(ref[0]==='7am'?'7am price':'price at off')+'</div>';
 }
 function goalsCell(g){
+  if(g.vs && g.vs.sq && (g.vs.sq.g1 || g.vs.sq.g2)){
+    var sq = g.vs.sq;
+    return '<div class="sqs">'+['g1','g2','f1','f2'].map(function(k){ return sq[k] ? square(g, k, lineLab(sq[k].ln)) : ''; }).join('')+'</div>';
+  }
   var ln = g.ln || {}, out = [];
   var goals = g.sc ? (g.sc[0]||0) + (g.sc[1]||0) : 0;
   var nxt = 'OU' + goals + '5';
@@ -371,12 +428,24 @@ function detail(g){
   if(g.off) kv.push(['At the off H/D/A', [g.off.h,g.off.d,g.off.a].map(pr).join(' / ')]);
   if(g.px) kv.push(['Now H/D/A', [g.px.h,g.px.d,g.px.a].map(pr).join(' / ') + (g.px.age!=null ? ' <span class="muted">('+Math.round(g.px.age/60)+' min old)</span>' : '')]);
   if(g.card) kv.push(['On the Trading Card', esc(g.card)]);
+  var vt = '';
+  if(g.vs && g.vs.sq){
+    var src = {off:'Betfair prices at the off', '7am':'the 7am Betfair prices', xg:'NewModel xG (no prices found)'}[g.vs.src] || g.vs.src;
+    var nm = {h:'Home', d:'Draw (lay)', a:'Away'};
+    vt = '<p class="dh" style="margin-top:12px">Fair prices (our model)</p><table class="vt num"><tr><th>Market</th><th>Fair</th><th>Chance</th><th>Betfair</th><th>Value</th></tr>'+
+      ['h','d','a','g1','g2','f1','f2'].filter(function(k){ return g.vs.sq[k]; }).map(function(k){
+        var e = g.vs.sq[k];
+        var lab = nm[k] || (/^FH/.test(e.ln||'') ? '1st half over '+lineLab(e.ln).replace(/^FH /,'') : 'Over '+lineLab(e.ln).replace(/^O/,''));
+        return '<tr><td>'+esc(lab)+'</td><td><b>'+pr(e.f)+'</b></td><td>'+e.p+'%</td><td>'+(e.b?pr(e.b)+(e.old?' <span class="muted">(old)</span>':''):'<span class="muted">&ndash;</span>')+'</td><td style="'+sqBg(e.v)+'">'+(e.v!=null?(e.v>0?'+':'')+e.v+'%':'')+'</td></tr>';
+      }).join('')+'</table><div class="sm" style="margin-top:4px">Pre-match from '+esc(src)+': '+f2(g.vs.lam[0])+' &ndash; '+f2(g.vs.lam[1])+' goals'+
+      (g.vs.xm ? ' &middot; live xG nudge &times;'+g.vs.xm[0]+' / &times;'+g.vs.xm[1] : '')+(g.vs.rc ? ' &middot; red card allowed for' : '')+'</div>';
+  }
   if(g.ssrc==='ls' || g.msrc==='ls') kv.push(['Live data from', 'LiveScore <span class="muted">(SofaScore unavailable: no xG or momentum)</span>']);
   if(g.sn) kv.push(['SofaScore', esc(g.sn[0])+' v '+esc(g.sn[1]) + (g.url ? ' &middot; <a href="'+esc(g.url)+'" target="_blank" rel="noopener">open</a>' : '')]);
   if(g.sat) kv.push(['Stats updated', new Date(g.sat*1000).toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'})]);
   return '<div class="detgrid"><div><p class="dh">Momentum</p>'+mom+
     (bars ? '<p class="dh" style="margin-top:12px">'+esc(g.h)+' v '+esc(g.a)+'</p><div class="bars">'+bars+'</div>' : '')+
-    '</div><div><p class="dh">Game</p><div class="kv">'+kv.map(function(p){ return '<span>'+p[0]+'</span><b class="num">'+p[1]+'</b>'; }).join('')+'</div></div></div>';
+    '</div><div><p class="dh">Game</p><div class="kv">'+kv.map(function(p){ return '<span>'+p[0]+'</span><b class="num">'+p[1]+'</b>'; }).join('')+'</div>'+vt+'</div></div>';
 }
 function wireChart(root){
   var c = root.querySelector('.chart'); if(!c) return;
@@ -404,6 +473,8 @@ function filtered(){
     if(UI.lg && g.lg!==UI.lg) return false;
     if(q && (g.h+' '+g.a+' '+g.lg).toLowerCase().indexOf(q) < 0) return false;
     if(UI.flagsOnly && !flags(g).length) return false;
+    if(UI.val==='5' && !((bestVal(g)||0) >= 5)) return false;
+    if(UI.val==='ian' && !(g.vs && g.vs.ian)) return false;
     return true;
   }).sort(function(a,b){
     var stRank = function(g){ return isLive(g) ? 0 : g.st==='nm' ? 1 : g.st==='ns' ? 2 : 3; };
@@ -412,6 +483,7 @@ function filtered(){
     if(UI.sort==='xgt') return ((b.xg?b.xg[0]+b.xg[1]:-1) - (a.xg?a.xg[0]+a.xg[1]:-1)) || a.kt-b.kt;
     if(UI.sort==='xgd') return ((b.xg?Math.abs(b.xg[0]-b.xg[1]):-1) - (a.xg?Math.abs(a.xg[0]-a.xg[1]):-1)) || a.kt-b.kt;
     if(UI.sort==='flags') return (flags(b).length - flags(a).length) || stRank(a)-stRank(b) || a.kt-b.kt;
+    if(UI.sort==='val'){ var va = bestVal(a), vb = bestVal(b); return ((vb==null?-999:vb) - (va==null?-999:va)) || stRank(a)-stRank(b) || a.kt-b.kt; }
     return a.kt-b.kt;
   });
 }
@@ -468,12 +540,15 @@ function render(){
     var shTxt = g.sh ? '<span>Shots <b class="num">'+f0(g.sh[0])+'</b>'+(g.sot?' <span class="muted">('+f0(g.sot[0])+')</span>':'')+' &ndash; <b class="num">'+f0(g.sh[1])+'</b>'+(g.sot?' <span class="muted">('+f0(g.sot[1])+')</span>':'')+'</span>' : '<span></span>';
     var pxs = (g.px || g.off || g.p7) ? ['h','d','a'].map(function(k){ var v = (g.px&&g.px[k]) || (g.off&&g.off[k]) || (g.p7&&g.p7[k]); return pr(v) || '–'; }).join(' / ') : '';
     var pxLab = g.px ? 'MO' : g.off ? 'MO at off' : g.p7 ? 'MO 7am' : '';
+    var sqRow = (g.vs && g.vs.sq) ? '<div class="c5 sqs" style="flex-wrap:wrap">'+square(g,'h','Home')+square(g,'d','Draw')+square(g,'a','Away')+
+      ['g1','g2','f1','f2'].map(function(k){ return g.vs.sq[k] ? square(g, k, lineLab(g.vs.sq[k].ln)) : ''; }).join('')+'</div>' : '';
     cards.push('<div class="card'+fin+'" data-k="'+esc(g.k)+'">'+
       '<div class="c1">'+timeCell(g)+'<span class="lg">'+esc(g.lg)+(note?' &middot; '+note:'')+'</span>'+(g.st!=='ns'&&!isLive(g)&&!isFin(g)?'':'<span class="num">'+(isLive(g)||isFin(g)?esc(g.ko):'')+'</span>')+'</div>'+
       '<div class="c2"><div class="team r">'+teamName(g,'h')+'</div><div>'+scoreCell(g)+'</div><div class="team">'+teamName(g,'a')+'</div></div>'+
       ((g.xg||g.sh||g.pxg!=null) ? '<div class="c3">'+xgTxt+shTxt+'</div>' : '')+
       (g.mom ? '<div class="c4">'+momSvg(g.mom, Math.min(560, (window.innerWidth||360) - 58), 30)+'</div>' : '')+
-      '<div class="c5">'+(pxs ? '<span>'+pxLab+' <b class="num">'+pxs+'</b></span>' : '')+goalsCell(g).replace('<span class="muted">&ndash;</span>','')+flagsCell(fl)+'</div>'+
+      (sqRow ? sqRow + '<div class="c5">'+flagsCell(fl)+'</div>' :
+      '<div class="c5">'+(pxs ? '<span>'+pxLab+' <b class="num">'+pxs+'</b></span>' : '')+goalsCell(g).replace('<span class="muted">&ndash;</span>','')+flagsCell(fl)+'</div>')+
       (open ? '<div class="det">'+detail(g)+'</div>' : '')+'</div>');
   });
   $('tb').innerHTML = tb.join('');
@@ -481,7 +556,7 @@ function render(){
   $('empty').hidden = rows.length > 0;
   document.querySelectorAll('tr.det, .card .det').forEach(wireChart);
   document.querySelectorAll('#chips button').forEach(function(x){ x.classList.toggle('on', x.getAttribute('data-f')===UI.f); });
-  $('sort').value = UI.sort; $('flagsOnly').checked = !!UI.flagsOnly;
+  $('sort').value = UI.sort; $('flagsOnly').checked = !!UI.flagsOnly; $('val').value = UI.val || '';
   if($('q').value !== UI.q) $('q').value = UI.q;
 }
 
@@ -490,6 +565,7 @@ $('chips').addEventListener('click', function(e){ var t = e.target.closest('butt
 $('league').addEventListener('change', function(){ UI.lg = this.value; saveUI(); render(); });
 $('sort').addEventListener('change', function(){ UI.sort = this.value; saveUI(); render(); });
 $('flagsOnly').addEventListener('change', function(){ UI.flagsOnly = this.checked; saveUI(); render(); });
+$('val').addEventListener('change', function(){ UI.val = this.value; saveUI(); render(); });
 $('q').addEventListener('input', function(){ UI.q = this.value; saveUI(); render(); });
 function toggle(e){
   if(e.target.closest('a') || e.target.closest('.det')) return;
