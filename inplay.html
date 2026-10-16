@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>In-Play Board</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+:root{
+  --bg:#111214;--panel:#1a1b1e;--panel2:#212226;--line:#2c2d31;--line2:#3a3b40;
+  --ink:#ececea;--ink2:#b9b8b2;--ink3:#86857f;
+  --home:#3987e5;--away:#d95926;--live:#e5484d;--live-bg:rgba(229,72,77,.14);
+  --flag-fav:#3fb950;--flag-fav-bg:rgba(63,185,80,.14);--flag-busy:#d29922;--flag-busy-bg:rgba(210,153,34,.15);
+  --flag-quiet:#8b949e;--flag-quiet-bg:rgba(139,148,158,.15);--warn:#d29922;--warn-bg:rgba(210,153,34,.14);
+  --chip:#2a2b30;--chip-on:#ececea;--chip-on-ink:#111214;--grid:#2c2d31;--base:#4a4b50;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#f6f6f4;--panel:#ffffff;--panel2:#f1f1ee;--line:#e4e3de;--line2:#d3d2cc;
+  --ink:#151513;--ink2:#52514e;--ink3:#7c7b76;
+  --home:#2a78d6;--away:#eb6834;--live:#c9302c;--live-bg:rgba(201,48,44,.10);
+  --flag-fav:#1a7f37;--flag-fav-bg:rgba(26,127,55,.10);--flag-busy:#9a6700;--flag-busy-bg:rgba(154,103,0,.10);
+  --flag-quiet:#57606a;--flag-quiet-bg:rgba(87,96,106,.10);--warn:#9a6700;--warn-bg:rgba(154,103,0,.10);
+  --chip:#ebebe7;--chip-on:#151513;--chip-on-ink:#ffffff;--grid:#e4e3de;--base:#c3c2b7;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body{padding:0 16px 40px}
+[hidden]{display:none!important}
+.num{font-variant-numeric:tabular-nums}
+header{position:sticky;top:0;z-index:5;background:var(--bg);padding:12px 0 10px;border-bottom:1px solid var(--line)}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+h1{font-size:18px;font-weight:600;margin:0;letter-spacing:.2px}
+.counts{color:var(--ink2);font-size:13px}
+.counts b{color:var(--ink);font-weight:600}
+.spacer{flex:1}
+.upd{color:var(--ink3);font-size:12px}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:2px 9px;font-size:12px;white-space:nowrap}
+.pill.warn{background:var(--warn-bg);color:var(--warn)}
+button,select,input{font:inherit;color:var(--ink);background:var(--chip);border:1px solid var(--line2);border-radius:8px;padding:5px 10px}
+button{cursor:pointer}
+button:hover{border-color:var(--ink3)}
+.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.chips{display:flex;gap:4px;background:var(--chip);border:1px solid var(--line2);border-radius:9px;padding:2px}
+.chips button{border:0;background:transparent;padding:4px 10px;border-radius:7px;color:var(--ink2)}
+.chips button.on{background:var(--chip-on);color:var(--chip-on-ink)}
+.ck{display:inline-flex;align-items:center;gap:6px;color:var(--ink2);font-size:13px;cursor:pointer}
+input[type=search]{min-width:150px}
+.wrap{overflow-x:auto;margin-top:8px}
+table{border-collapse:collapse;width:100%;min-width:1180px}
+th{font-size:11px;font-weight:600;color:var(--ink3);text-transform:none;text-align:center;padding:8px 6px;border-bottom:1px solid var(--line);white-space:nowrap;position:sticky;top:0;background:var(--bg)}
+th.l,td.l{text-align:left}
+td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:center;vertical-align:middle}
+tr.g{cursor:pointer}
+tr.g:hover td{background:var(--panel)}
+tr.g.open td{background:var(--panel)}
+tr.g.fin td{opacity:.62}
+.big{font-size:15px;font-weight:600}
+.sm{font-size:11px;color:var(--ink3);margin-top:1px}
+.time .big{font-size:14px}
+.mins{display:inline-block;min-width:44px;padding:2px 6px;border-radius:6px;font-weight:700;font-size:13px}
+.mins.live{background:var(--live-bg);color:var(--live)}
+.mins.ht{background:var(--panel2);color:var(--ink)}
+.mins.ft{color:var(--ink3);font-weight:600}
+.mins.ns{color:var(--ink2);font-weight:600}
+.team{font-size:14px;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.team.r{text-align:right}
+.fav{font-weight:700}
+.score{font-size:16px;font-weight:700;white-space:nowrap}
+.xgcell{min-width:54px}
+.mom svg{display:block;margin:0 auto}
+.price .big{font-weight:600;font-size:14px}
+.price .sm{white-space:nowrap}
+.flags{display:flex;flex-direction:column;gap:3px;align-items:flex-start}
+.fl{font-size:11px;border-radius:6px;padding:1px 7px;white-space:nowrap;font-weight:600}
+.fl.fav{background:var(--flag-fav-bg);color:var(--flag-fav)}
+.fl.busy{background:var(--flag-busy-bg);color:var(--flag-busy)}
+.fl.quiet{background:var(--flag-quiet-bg);color:var(--flag-quiet)}
+.muted{color:var(--ink3)}
+.det td{background:var(--panel);padding:12px 14px 16px;text-align:left;cursor:default}
+.detgrid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:22px}
+.dh{font-size:12px;color:var(--ink3);margin:0 0 6px;font-weight:600}
+.bars{display:grid;max-width:520px;grid-template-columns:44px minmax(0,1fr) 44px;gap:3px 8px;align-items:center;font-size:12.5px}
+.bars .lab{grid-column:1/-1;text-align:center;color:var(--ink3);font-size:11px;margin-top:4px}
+.bar{display:flex;height:6px;border-radius:3px;overflow:hidden;background:var(--panel2);gap:2px}
+.bar i{display:block;height:100%}
+.bh{background:var(--home)}.ba{background:var(--away)}
+.vh{text-align:right}.va{text-align:left}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:12.5px;color:var(--ink2)}
+.kv b{color:var(--ink);font-weight:600}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--ink2);flex-wrap:wrap;margin:6px 0 2px}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.chart{position:relative}
+.tip{position:absolute;pointer-events:none;background:var(--panel2);border:1px solid var(--line2);border-radius:6px;padding:3px 7px;font-size:11.5px;white-space:nowrap;transform:translate(-50%,-110%)}
+a{color:var(--home)}
+.empty{padding:40px 0;text-align:center;color:var(--ink3)}
+details.help{margin-top:18px;color:var(--ink2);font-size:13px;max-width:900px}
+details.help summary{cursor:pointer;color:var(--ink2)}
+details.help p,details.help li{line-height:1.5}
+footer{margin-top:22px;color:var(--ink3);font-size:12px}
+/* ---------- cards (phones) ---------- */
+.cards{display:none}
+@media (max-width:820px){
+  header{position:static}
+  .legend .muted{display:none}
+  .wrap{display:none}
+  .cards{display:block;margin-top:8px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+  .card.fin{opacity:.65}
+  .c1{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink3)}
+  .c1 .lg{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .c2{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:8px;align-items:center;margin:6px 0 4px}
+  .c2 .team{max-width:none;font-size:15px}
+  .c3{display:flex;flex-wrap:wrap;gap:3px 14px;font-size:12.5px;color:var(--ink2)}
+  .c3>span{white-space:nowrap}
+  .c3 b{color:var(--ink);font-weight:600}
+  .c4{margin-top:6px}
+  .c5{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;font-size:12.5px;color:var(--ink2)}
+  .c5 b{color:var(--ink)}
+  .detgrid{grid-template-columns:1fr}
+  .card .det{margin-top:10px;border-top:1px solid var(--line);padding-top:10px}
+  input[type=search]{min-width:0;flex:1}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <h1>In-play board</h1>
+    <span class="counts num" id="counts"></span>
+    <span class="spacer"></span>
+    <span id="warn"></span>
+    <span class="upd num" id="upd">loading&hellip;</span>
+    <button id="refresh" title="Refresh now" aria-label="Refresh now">&#8635;</button>
+    <button id="theme" title="Light / dark" aria-label="Switch light or dark">Theme</button>
+  </div>
+  <div class="controls">
+    <div class="chips" id="chips" role="tablist">
+      <button data-f="now" class="on">Live &amp; upcoming</button>
+      <button data-f="live">Live</button>
+      <button data-f="fin">Finished</button>
+      <button data-f="all">All</button>
+    </div>
+    <select id="league" aria-label="League"><option value="">All leagues</option></select>
+    <select id="sort" aria-label="Sort">
+      <option value="ko">Sort: kick-off</option>
+      <option value="min">Sort: minute</option>
+      <option value="xgt">Sort: total xG</option>
+      <option value="xgd">Sort: xG gap</option>
+      <option value="flags">Sort: flags first</option>
+    </select>
+    <label class="ck"><input type="checkbox" id="flagsOnly"> Flagged only</label>
+    <input type="search" id="q" placeholder="Team or league" aria-label="Search">
+  </div>
+  <div class="legend"><span><span class="sw" style="background:var(--home)"></span>Home pressure</span><span><span class="sw" style="background:var(--away)"></span>Away pressure</span><span class="muted">Big number = xG / shots &middot; small = on target &middot; bold team = favourite at the off</span></div>
+</header>
+
+<div class="wrap">
+<table>
+  <thead><tr>
+    <th class="l">Time</th><th class="l" style="text-align:right">Home</th><th>Score</th><th class="l">Away</th>
+    <th title="FTS pre-match total xG">Pre xG</th><th>xG H</th><th>xG A</th><th>Momentum</th>
+    <th>Shots H</th><th>Shots A</th><th>Home</th><th>Draw</th><th>Away</th><th>Goals</th><th class="l">Flags</th>
+  </tr></thead>
+  <tbody id="tb"></tbody>
+</table>
+</div>
+<div class="cards" id="cards"></div>
+<div class="empty" id="empty" hidden>Nothing to show with these filters.</div>
+
+<details class="help">
+  <summary>What the columns mean</summary>
+  <ul>
+    <li><b>Pre xG</b>: FTS's modelled total goals before kick-off (NewModel).</li>
+    <li><b>xG H / xG A</b>: live expected goals for each side (big), with expected goals on target underneath (small). xG on target only counts shots that hit the target, weighted by where they were going, so it shows how hard each keeper is being worked.</li>
+    <li><b>Momentum</b>: SofaScore attack momentum, one bar a minute. Blue above the line is home pressure, orange below is away. The faint line marks half-time.</li>
+    <li><b>Shots</b>: total shots (big) and shots on target (small).</li>
+    <li><b>Home / Draw / Away</b>: Betfair back prices from your in-play price log (small: the price at the off, or 7am). <b>Goals</b>: the Over line just above the current score, plus first-half Over 0.5 in the first half.</li>
+    <li><b>Flags</b> are rules of thumb, not tested yet: <b>Fav behind, on top</b> = the favourite is losing after 15' but leads xG by 0.4+ (or shots by 4+) and isn't behind on shots on target. <b>xG &gt; goals</b> = after 20', total xG is at least 0.9 more than the goals scored. <b>Quiet</b> = after 30', total xG under 0.35 and at most one shot on target.</li>
+    <li>xG and xG on target are only available in leagues where SofaScore has them (most main European leagues, Brazil, MLS...). Elsewhere you still get shots, shots on target and momentum.</li>
+  </ul>
+</details>
+<footer id="foot">FTS &middot; in-play board &middot; live stats: SofaScore (unofficial) &middot; prices: your Betfair in-play log</footer>
+
+<script>
+window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "1.0"};
+(function(){
+'use strict';
+var CFG = window.__BOARD || {};
+var BOARD = null, lastApi = 0, OPEN = {}, timer = null;
+var UI = {f:'now', lg:'', sort:'ko', flagsOnly:false, q:''};
+function ls(k,v){ try{ if(v===undefined){ return localStorage.getItem(k); } localStorage.setItem(k,v); }catch(e){ return null; } }
+try{ var s = JSON.parse(ls('ipb.ui')||'{}'); for(var k in s){ if(k in UI) UI[k]=s[k]; } }catch(e){}
+var th = ls('ipb.theme'); if(th==='light') document.documentElement.setAttribute('data-theme','light');
+function saveUI(){ ls('ipb.ui', JSON.stringify(UI)); }
+
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function f2(v){ return v==null ? '' : (Math.round(v*100)/100).toFixed(2); }
+function f0(v){ return v==null ? '' : String(Math.round(v)); }
+function pr(v){ if(v==null||!v) return ''; v=+v; return v>=100 ? v.toFixed(0) : v>=10 ? v.toFixed(1) : v.toFixed(2); }
+function nowS(){ return Date.now()/1000; }
+function isLive(g){ return g.st==='live' || g.st==='ht'; }
+function isFin(g){ return g.st==='ft'||g.st==='aet'||g.st==='pen'||g.st==='off'||g.st==='done'; }
+
+// ---------------------------------------------------------------- data
+function getJSON(url, hdr){
+  return fetch(url, hdr ? {headers:hdr, cache:'no-store'} : {cache:'no-store'})
+    .then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; });
+}
+function b64json(c){
+  var b = c.replace(/\s/g,''), t;
+  try{ t = new TextDecoder().decode(Uint8Array.from(atob(b), function(ch){ return ch.charCodeAt(0); })); }
+  catch(e){ t = atob(b); }
+  return JSON.parse(t);
+}
+function load(){
+  var qs = new URLSearchParams(location.search), src = qs.get('src');
+  var p;
+  if(src){ p = getJSON(src + (src.indexOf('?')>=0?'&':'?') + 't=' + Date.now()); }
+  else if(CFG.raw){
+    p = getJSON(CFG.raw + '?t=' + Date.now()).then(function(b){
+      var old = !b || (nowS() - b.generated > 200 && b.live > 0);
+      if(old && CFG.api && Date.now() - lastApi > 150000){
+        lastApi = Date.now();
+        return getJSON(CFG.api, {'Accept':'application/vnd.github+json'}).then(function(a){
+          try{ if(a && a.content){ var bb = b64json(a.content); if(!b || bb.generated > b.generated) return bb; } }catch(e){}
+          return b;
+        });
+      }
+      return b;
+    });
+  } else { p = Promise.resolve(null); }
+  return p.then(function(b){ if(b && b.games){ BOARD = b; } render(); });
+}
+
+// ---------------------------------------------------------------- flags (rules of thumb)
+function flags(g){
+  var out = [];
+  if(!isLive(g)) return out;
+  var m = g.min || (g.st==='ht' ? 45 : 0), sc = g.sc || [0,0];
+  if(g.fav && m >= 15){
+    var fi = g.fav==='h' ? 0 : 1, oi = 1 - fi;
+    if((sc[fi]||0) < (sc[oi]||0)){
+      var ok = false, sotOk = !g.sot || g.sot[fi] >= g.sot[oi];
+      if(g.xg) ok = (g.xg[fi] - g.xg[oi] >= 0.4) && sotOk;
+      else if(g.sh) ok = (g.sh[fi] >= g.sh[oi] + 4) && sotOk;
+      if(ok) out.push(['fav','Fav behind, on top']);
+    }
+  }
+  if(g.xg && m >= 20){
+    var tx = g.xg[0] + g.xg[1], goals = (sc[0]||0) + (sc[1]||0);
+    if(tx - goals >= 0.9) out.push(['busy','xG > goals']);
+    if(m >= 30 && tx < 0.35 && (!g.sot || g.sot[0] + g.sot[1] <= 1)) out.push(['quiet','Quiet']);
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------- momentum chart
+function momSvg(mom, w, h, opt){
+  opt = opt || {};
+  if(!mom || !mom.length) return '<span class="muted">&ndash;</span>';
+  var last = mom[mom.length-1][0], span = Math.max(90, Math.ceil(last) + 1), mid = h/2;
+  var x = function(m){ return (m - 1) / (span - 1) * w; };
+  var y = function(v){ return Math.max(-100, Math.min(100, v)) / 100 * (mid - 1); };
+  var pts = mom.filter(function(p){ return p[0] % 1 === 0; });   // 45.5 / 90.5 are period markers
+  var parts = [];
+  parts.push('<line x1="'+x(46).toFixed(1)+'" x2="'+x(46).toFixed(1)+'" y1="1" y2="'+(h-1)+'" stroke="var(--grid)" stroke-width="1"/>');
+  if(opt.bars){
+    var bw = Math.max(1, w/span - (w/span > 3 ? 0.8 : 0));
+    pts.forEach(function(p){
+      var hh = Math.abs(y(p[1])); if(hh < 0.5) return;
+      parts.push('<rect x="'+x(p[0]).toFixed(1)+'" y="'+(p[1]>=0 ? (mid-hh) : mid).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+hh.toFixed(1)+'" fill="var(--'+(p[1]>=0?'home':'away')+')"/>');
+    });
+  } else if(pts.length){
+    var area = function(sign){
+      var d = 'M'+x(pts[0][0]).toFixed(1)+','+mid;
+      pts.forEach(function(p){ var v = sign > 0 ? Math.max(0, p[1]) : Math.min(0, p[1]); d += 'L'+x(p[0]).toFixed(1)+','+(mid - y(v)).toFixed(1); });
+      return d + 'L'+x(pts[pts.length-1][0]).toFixed(1)+','+mid+'Z';
+    };
+    parts.push('<path d="'+area(1)+'" fill="var(--home)"/><path d="'+area(-1)+'" fill="var(--away)"/>');
+  }
+  parts.push('<line x1="0" x2="'+w+'" y1="'+mid+'" y2="'+mid+'" stroke="var(--base)" stroke-width="1"/>');
+  var last10 = pts.slice(-10).map(function(p){ return p[1]; });
+  var avg = last10.length ? last10.reduce(function(a,b){return a+b;},0)/last10.length : 0;
+  var lbl = 'Momentum to '+Math.floor(last)+"'. Last 10 min: "+(Math.abs(avg)<8 ? 'even' : (avg>0 ? 'home' : 'away')+' on top ('+(avg>0?'+':'')+Math.round(avg)+')');
+  return '<svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" role="img" aria-label="'+esc(lbl)+'"'+(opt.id?' id="'+opt.id+'"':'')+'><title>'+esc(lbl)+'</title>'+parts.join('')+'</svg>';
+}
+
+// ---------------------------------------------------------------- cells
+function timeCell(g){
+  var t, cls;
+  if(g.st==='live'){ t = g.mins || (g.min ? g.min+"'" : 'Live'); cls='live'; }
+  else if(g.st==='ht'){ t = g.mins || 'HT'; cls='ht'; }
+  else if(g.st==='ft'||g.st==='aet'||g.st==='pen'){ t = g.st.toUpperCase(); cls='ft'; }
+  else if(g.st==='off'){ t = 'Off'; cls='ft'; }
+  else if(g.st==='nm'){ t = g.ko; cls='ns'; }
+  else if(g.st==='done'){ t = g.ko; cls='ft'; }
+  else { t = g.ko; cls='ns'; }
+  return '<span class="mins '+cls+'">'+esc(t)+'</span>';
+}
+function stateNote(g){
+  if(g.st==='nm') return 'kicked off &middot; no live data yet';
+  if(g.st==='done') return 'no live data';
+  return '';
+}
+function scoreCell(g){
+  if(!g.sc) return '<span class="muted">'+(g.st==='ns'?'v':'&ndash;')+'</span>';
+  var s = '<div class="score num">'+f0(g.sc[0])+' &ndash; '+f0(g.sc[1])+'</div>';
+  if(g.ht && g.st!=='ht' && (g.min==null || g.min>45 || isFin(g))) s += '<div class="sm num">HT '+f0(g.ht[0])+'&ndash;'+f0(g.ht[1])+'</div>';
+  return s;
+}
+function pairCell(g, k, sub, i, dec){
+  var v = g[k], sv = g[sub];
+  if(!v) return '<span class="muted">&ndash;</span>';
+  return '<div class="big num">'+(dec ? f2(v[i]) : f0(v[i]))+'</div>'+(sv ? '<div class="sm num">'+(dec ? f2(sv[i]) : f0(sv[i]))+'</div>' : '');
+}
+function priceCell(g, k){
+  var live = g.px && g.px[k], ref = (g.off && g.off[k]) ? ['off', g.off[k]] : (g.p7 && g.p7[k]) ? ['7am', g.p7[k]] : null;
+  if(!live && !ref) return '<span class="muted">&ndash;</span>';
+  if(live) return '<div class="big num">'+pr(live)+'</div>'+(ref ? '<div class="sm num">'+ref[0]+' '+pr(ref[1])+'</div>' : '');
+  return '<div class="num muted">'+pr(ref[1])+'</div><div class="sm">'+ref[0]+'</div>';
+}
+function goalsCell(g){
+  var ln = g.ln || {}, out = [];
+  var goals = g.sc ? (g.sc[0]||0) + (g.sc[1]||0) : 0;
+  var nxt = 'OU' + goals + '5';
+  if(ln[nxt]) out.push('O'+goals+'.5 <b>'+pr(ln[nxt])+'</b>');
+  else if(ln.OU25 && goals < 3) out.push('O2.5 <b>'+pr(ln.OU25)+'</b>');
+  if(ln.FH05 && (g.min==null || g.min<=45) && g.st!=='ht' && (!g.ht && goals===0)) out.push('FH0.5 <b>'+pr(ln.FH05)+'</b>');
+  if(!out.length && g.p7 && g.p7.o25 && !isLive(g) && !isFin(g)) out.push('<span class="muted">O2.5 '+pr(g.p7.o25)+' 7am</span>');
+  return out.length ? '<div class="num" style="font-size:12.5px;line-height:1.5">'+out.join('<br>')+'</div>' : '<span class="muted">&ndash;</span>';
+}
+function flagsCell(fl){
+  if(!fl.length) return '';
+  return '<div class="flags">'+fl.map(function(f){ return '<span class="fl '+f[0]+'">'+esc(f[1])+'</span>'; }).join('')+'</div>';
+}
+function teamName(g, side){
+  var n = side==='h' ? g.h : g.a;
+  return '<span class="'+(g.fav===side?'fav':'')+'" title="'+esc(n + (g.fav===side ? ' (favourite at the '+(g.fsrc==='off'?'off':'7am price')+')' : ''))+'">'+esc(n)+'</span>';
+}
+
+// ---------------------------------------------------------------- detail panel
+function bar(lab, v, dec){
+  if(!v) return '';
+  var a = +v[0]||0, b = +v[1]||0, t = a + b;
+  var pa = t ? a/t*100 : 50, pb = t ? b/t*100 : 50;
+  var fmt = dec ? f2 : f0;
+  return '<div class="lab">'+esc(lab)+'</div><div class="vh num">'+fmt(a)+'</div>'+
+    '<div class="bar"><i class="bh" style="width:'+pa.toFixed(1)+'%"></i><i class="ba" style="width:'+pb.toFixed(1)+'%"></i></div>'+
+    '<div class="va num">'+fmt(b)+'</div>';
+}
+function detail(g){
+  var w = Math.min(560, Math.max(260, (window.innerWidth||800) - 120));
+  if(w > 560) w = 560;
+  var mom = g.mom ? '<div class="chart" data-k="'+esc(g.k)+'">'+momSvg(g.mom, w, 90, {id:'mc', bars:true})+'<div class="tip" hidden></div></div>' : '<div class="muted">No momentum data.</div>';
+  var bars = bar('Possession %', g.po) + bar('xG', g.xg, true) + bar('xG on target', g.xgot, true) + bar('Shots', g.sh) +
+             bar('Shots on target', g.sot) + bar('Big chances', g.bc) + bar('Corners', g.co) + bar('Saves', g.sv) +
+             bar('Touches in the box', g.tb) + bar('Red cards', g.rc);
+  var kv = [];
+  if(g.pxh!=null) kv.push(['FTS pre-match xG', f2(g.pxh)+' &ndash; '+f2(g.pxa)]);
+  if(g.fair) kv.push(['FTS fair odds H/D/A', [g.fair.h,g.fair.d,g.fair.a].map(pr).join(' / ')]);
+  if(g.p7) kv.push(['7am Betfair H/D/A', [g.p7.h,g.p7.d,g.p7.a].map(pr).join(' / ')]);
+  if(g.off) kv.push(['At the off H/D/A', [g.off.h,g.off.d,g.off.a].map(pr).join(' / ')]);
+  if(g.px) kv.push(['Now H/D/A', [g.px.h,g.px.d,g.px.a].map(pr).join(' / ') + (g.px.age!=null ? ' <span class="muted">('+Math.round(g.px.age/60)+' min old)</span>' : '')]);
+  if(g.card) kv.push(['On the Trading Card', esc(g.card)]);
+  if(g.sn) kv.push(['SofaScore', esc(g.sn[0])+' v '+esc(g.sn[1]) + (g.url ? ' &middot; <a href="'+esc(g.url)+'" target="_blank" rel="noopener">open</a>' : '')]);
+  if(g.sat) kv.push(['Stats updated', new Date(g.sat*1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})]);
+  return '<div class="detgrid"><div><p class="dh">Momentum</p>'+mom+
+    (bars ? '<p class="dh" style="margin-top:12px">'+esc(g.h)+' v '+esc(g.a)+'</p><div class="bars">'+bars+'</div>' : '')+
+    '</div><div><p class="dh">Game</p><div class="kv">'+kv.map(function(p){ return '<span>'+p[0]+'</span><b class="num">'+p[1]+'</b>'; }).join('')+'</div></div></div>';
+}
+function wireChart(root){
+  var c = root.querySelector('.chart'); if(!c) return;
+  var g = (BOARD.games||[]).filter(function(x){ return x.k===c.getAttribute('data-k'); })[0]; if(!g || !g.mom) return;
+  var svg = c.querySelector('svg'), tip = c.querySelector('.tip');
+  var pts = g.mom.filter(function(p){ return p[0] % 1 === 0; });
+  var last = g.mom[g.mom.length-1][0], span = Math.max(90, Math.ceil(last)+1), w = +svg.getAttribute('width');
+  svg.addEventListener('mousemove', function(ev){
+    var r = svg.getBoundingClientRect(), xm = (ev.clientX - r.left) / r.width * (span - 1) + 1;
+    var best = null; pts.forEach(function(p){ if(!best || Math.abs(p[0]-xm) < Math.abs(best[0]-xm)) best = p; });
+    if(!best) return;
+    tip.hidden = false; tip.style.left = ((best[0]-1)/(span-1)*w)+'px'; tip.style.top = '6px';
+    tip.textContent = best[0] + "'  " + (best[1] >= 0 ? g.h + ' +' + best[1] : g.a + ' +' + (-best[1]));
+  });
+  svg.addEventListener('mouseleave', function(){ tip.hidden = true; });
+}
+
+// ---------------------------------------------------------------- render
+function filtered(){
+  var gs = (BOARD && BOARD.games) || [], q = UI.q.trim().toLowerCase();
+  return gs.filter(function(g){
+    if(UI.f==='now' && isFin(g)) return false;
+    if(UI.f==='live' && !(isLive(g) || g.st==='nm')) return false;
+    if(UI.f==='fin' && !isFin(g)) return false;
+    if(UI.lg && g.lg!==UI.lg) return false;
+    if(q && (g.h+' '+g.a+' '+g.lg).toLowerCase().indexOf(q) < 0) return false;
+    if(UI.flagsOnly && !flags(g).length) return false;
+    return true;
+  }).sort(function(a,b){
+    var stRank = function(g){ return isLive(g) ? 0 : g.st==='nm' ? 1 : g.st==='ns' ? 2 : 3; };
+    if(UI.sort==='ko'){ var r = stRank(a)-stRank(b); if(r) return r; return isFin(a) ? b.kt-a.kt : a.kt-b.kt; }
+    if(UI.sort==='min') return (b.min||(b.st==='ht'?45:-1)) - (a.min||(a.st==='ht'?45:-1)) || a.kt-b.kt;
+    if(UI.sort==='xgt') return ((b.xg?b.xg[0]+b.xg[1]:-1) - (a.xg?a.xg[0]+a.xg[1]:-1)) || a.kt-b.kt;
+    if(UI.sort==='xgd') return ((b.xg?Math.abs(b.xg[0]-b.xg[1]):-1) - (a.xg?Math.abs(a.xg[0]-a.xg[1]):-1)) || a.kt-b.kt;
+    if(UI.sort==='flags') return (flags(b).length - flags(a).length) || stRank(a)-stRank(b) || a.kt-b.kt;
+    return a.kt-b.kt;
+  });
+}
+function render(){
+  var b = BOARD;
+  if(!b){ $('upd').textContent = CFG.raw || new URLSearchParams(location.search).get('src') ? 'waiting for data…' : 'not configured'; return; }
+  var gs = b.games || [];
+  var live = gs.filter(isLive).length, up = gs.filter(function(g){ return g.st==='ns'; }).length, fin = gs.filter(isFin).length;
+  $('counts').innerHTML = '<b>'+live+'</b> live &middot; <b>'+up+'</b> to come &middot; <b>'+fin+'</b> finished';
+  var age = Math.max(0, nowS() - b.generated);
+  $('upd').textContent = 'updated ' + (age < 90 ? Math.round(age)+'s' : Math.round(age/60)+' min') + ' ago';
+  var w = [];
+  if(live && age > 360) w.push('Data '+Math.round(age/60)+' min old &ndash; is the VM collector running?');
+  if(b.feed_ok === false) w.push('SofaScore not responding &ndash; showing the last stats');
+  $('warn').innerHTML = w.map(function(t){ return '<span class="pill warn">'+t+'</span>'; }).join(' ');
+  // league list
+  var sel = $('league'), cur = UI.lg, lgs = {};
+  gs.forEach(function(g){ if(g.lg) lgs[g.lg] = 1; });
+  var opts = '<option value="">All leagues</option>' + Object.keys(lgs).sort().map(function(l){ return '<option'+(l===cur?' selected':'')+'>'+esc(l)+'</option>'; }).join('');
+  if(sel.getAttribute('data-o') !== opts){ sel.innerHTML = opts; sel.setAttribute('data-o', opts); sel.value = cur; }
+  var rows = filtered(), tb = [], cards = [];
+  rows.forEach(function(g){
+    var fl = flags(g), open = !!OPEN[g.k], fin = isFin(g) ? ' fin' : '';
+    var note = stateNote(g);
+    tb.push('<tr class="g'+(open?' open':'')+fin+'" data-k="'+esc(g.k)+'">'+
+      '<td class="l time">'+timeCell(g)+'<div class="sm" title="'+esc(g.lg)+'">'+esc((g.lg||'').slice(0,26))+(note?' &middot; '+note:'')+'</div></td>'+
+      '<td class="team r">'+teamName(g,'h')+'</td><td>'+scoreCell(g)+'</td><td class="team l">'+teamName(g,'a')+'</td>'+
+      '<td class="num">'+(g.pxg!=null ? f2(g.pxg) : '<span class="muted">&ndash;</span>')+'</td>'+
+      '<td class="xgcell">'+pairCell(g,'xg','xgot',0,true)+'</td><td class="xgcell">'+pairCell(g,'xg','xgot',1,true)+'</td>'+
+      '<td class="mom">'+momSvg(g.mom, 132, 34)+'</td>'+
+      '<td>'+pairCell(g,'sh','sot',0)+'</td><td>'+pairCell(g,'sh','sot',1)+'</td>'+
+      '<td class="price">'+priceCell(g,'h')+'</td><td class="price">'+priceCell(g,'d')+'</td><td class="price">'+priceCell(g,'a')+'</td>'+
+      '<td>'+goalsCell(g)+'</td><td class="l">'+flagsCell(fl)+'</td></tr>');
+    if(open) tb.push('<tr class="det" data-d="'+esc(g.k)+'"><td colspan="15">'+detail(g)+'</td></tr>');
+    var xgTxt = g.xg ? '<span>xG <b class="num">'+f2(g.xg[0])+'</b>'+(g.xgot?' <span class="muted">('+f2(g.xgot[0])+')</span>':'')+' &ndash; <b class="num">'+f2(g.xg[1])+'</b>'+(g.xgot?' <span class="muted">('+f2(g.xgot[1])+')</span>':'')+'</span>' : '<span class="muted">'+(g.pxg!=null ? 'pre xG '+f2(g.pxg) : '')+'</span>';
+    var shTxt = g.sh ? '<span>Shots <b class="num">'+f0(g.sh[0])+'</b>'+(g.sot?' <span class="muted">('+f0(g.sot[0])+')</span>':'')+' &ndash; <b class="num">'+f0(g.sh[1])+'</b>'+(g.sot?' <span class="muted">('+f0(g.sot[1])+')</span>':'')+'</span>' : '<span></span>';
+    var pxs = (g.px || g.off || g.p7) ? ['h','d','a'].map(function(k){ var v = (g.px&&g.px[k]) || (g.off&&g.off[k]) || (g.p7&&g.p7[k]); return pr(v) || '–'; }).join(' / ') : '';
+    var pxLab = g.px ? 'MO' : g.off ? 'MO at off' : g.p7 ? 'MO 7am' : '';
+    cards.push('<div class="card'+fin+'" data-k="'+esc(g.k)+'">'+
+      '<div class="c1">'+timeCell(g)+'<span class="lg">'+esc(g.lg)+(note?' &middot; '+note:'')+'</span>'+(g.st!=='ns'&&!isLive(g)&&!isFin(g)?'':'<span class="num">'+(isLive(g)||isFin(g)?esc(g.ko):'')+'</span>')+'</div>'+
+      '<div class="c2"><div class="team r">'+teamName(g,'h')+'</div><div>'+scoreCell(g)+'</div><div class="team">'+teamName(g,'a')+'</div></div>'+
+      ((g.xg||g.sh||g.pxg!=null) ? '<div class="c3">'+xgTxt+shTxt+'</div>' : '')+
+      (g.mom ? '<div class="c4">'+momSvg(g.mom, Math.min(560, (window.innerWidth||360) - 58), 30)+'</div>' : '')+
+      '<div class="c5">'+(pxs ? '<span>'+pxLab+' <b class="num">'+pxs+'</b></span>' : '')+goalsCell(g).replace('<span class="muted">&ndash;</span>','')+flagsCell(fl)+'</div>'+
+      (open ? '<div class="det">'+detail(g)+'</div>' : '')+'</div>');
+  });
+  $('tb').innerHTML = tb.join('');
+  $('cards').innerHTML = cards.join('');
+  $('empty').hidden = rows.length > 0;
+  document.querySelectorAll('tr.det, .card .det').forEach(wireChart);
+  document.querySelectorAll('#chips button').forEach(function(x){ x.classList.toggle('on', x.getAttribute('data-f')===UI.f); });
+  $('sort').value = UI.sort; $('flagsOnly').checked = !!UI.flagsOnly;
+  if($('q').value !== UI.q) $('q').value = UI.q;
+}
+
+// ---------------------------------------------------------------- events
+$('chips').addEventListener('click', function(e){ var t = e.target.closest('button'); if(!t) return; UI.f = t.getAttribute('data-f'); saveUI(); render(); });
+$('league').addEventListener('change', function(){ UI.lg = this.value; saveUI(); render(); });
+$('sort').addEventListener('change', function(){ UI.sort = this.value; saveUI(); render(); });
+$('flagsOnly').addEventListener('change', function(){ UI.flagsOnly = this.checked; saveUI(); render(); });
+$('q').addEventListener('input', function(){ UI.q = this.value; saveUI(); render(); });
+function toggle(e){
+  if(e.target.closest('a') || e.target.closest('.det')) return;
+  var r = e.target.closest('[data-k]'); if(!r) return;
+  var k = r.getAttribute('data-k'); if(OPEN[k]) delete OPEN[k]; else OPEN[k] = 1; render();
+}
+$('tb').addEventListener('click', toggle);
+$('cards').addEventListener('click', toggle);
+$('refresh').addEventListener('click', function(){ load(); });
+$('theme').addEventListener('click', function(){
+  var light = document.documentElement.getAttribute('data-theme') === 'light';
+  if(light){ document.documentElement.removeAttribute('data-theme'); ls('ipb.theme','dark'); }
+  else { document.documentElement.setAttribute('data-theme','light'); ls('ipb.theme','light'); }
+});
+document.addEventListener('visibilitychange', function(){ if(!document.hidden) load(); });
+setInterval(function(){ if(!document.hidden) load(); }, 60000);
+setInterval(function(){ if(BOARD && !document.hidden){ var age = Math.max(0, nowS() - BOARD.generated); $('upd').textContent = 'updated ' + (age < 90 ? Math.round(age)+'s' : Math.round(age/60)+' min') + ' ago'; } }, 15000);
+var rz; window.addEventListener('resize', function(){ clearTimeout(rz); rz = setTimeout(render, 200); });
+load();
+})();
+</script>
+</body>
+</html>
