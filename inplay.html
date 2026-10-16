@@ -184,7 +184,7 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
 <footer id="foot">FTS &middot; in-play board &middot; live stats: SofaScore (unofficial) &middot; prices: your Betfair in-play log</footer>
 
 <script>
-window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "1.2"};
+window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "1.3"};
 (function(){
 'use strict';
 var CFG = window.__BOARD || {};
@@ -221,7 +221,7 @@ function load(){
   if(src){ p = getJSON(src + (src.indexOf('?')>=0?'&':'?') + 't=' + Date.now()); }
   else if(CFG.raw){
     p = getJSON(CFG.raw + '?t=' + Date.now()).then(function(b){
-      var old = !b || (nowS() - b.generated > 200 && b.live > 0);
+      var old = !b || (nowS() - b.generated > 200 && b.live > 0) || (BOARD && b.generated < BOARD.generated);
       if(old && CFG.api && Date.now() - lastApi > 150000){
         lastApi = Date.now();
         return getJSON(CFG.api, {'Accept':'application/vnd.github+json'}).then(function(a){
@@ -232,7 +232,11 @@ function load(){
       return b;
     });
   } else { p = Promise.resolve(null); }
-  return p.then(function(b){ if(b && b.games){ BOARD = b; CHECKED = nowS(); } render(); });
+  // GitHub's cache can hand back a copy a minute or two older than the one already showing: never go backwards
+  return p.then(function(b){
+    if(b && b.games){ CHECKED = nowS(); if(!BOARD || b.generated >= BOARD.generated) BOARD = b; }
+    render();
+  });
 }
 
 // ---------------------------------------------------------------- flags (rules of thumb)
