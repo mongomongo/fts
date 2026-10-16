@@ -16,6 +16,8 @@
   --vpos:63,185,80;--vneg:229,72,77;--flag-val:#3fb950;--flag-val-bg:rgba(63,185,80,.18);
   --g-live:rgba(63,185,80,.13);--g-mo:rgba(57,135,229,.13);--g-goals:rgba(57,135,229,.22);--g-fh:rgba(163,113,247,.18);
   --goal:rgba(63,185,80,.42);--goal-ink:#7ee08f;--accent:#3987e5;
+  --flag-cor:#4cb8c4;--flag-cor-bg:rgba(76,184,196,.15);--flag-card:#e3b341;--flag-card-bg:rgba(227,179,65,.16);
+  --flag-len:#9da7b3;--flag-len-bg:rgba(157,167,179,.13);--g-cc:rgba(76,184,196,.14);--ycard:#e3b341;--rcard:#e5484d;
   color-scheme:dark;
 }
 :root[data-theme="light"]{
@@ -28,6 +30,8 @@
   --vpos:26,127,55;--vneg:201,48,44;--flag-val:#1a7f37;--flag-val-bg:rgba(26,127,55,.12);
   --g-live:rgba(26,127,55,.10);--g-mo:rgba(42,120,214,.10);--g-goals:rgba(42,120,214,.17);--g-fh:rgba(130,80,223,.13);
   --goal:rgba(26,127,55,.30);--goal-ink:#1a7f37;--accent:#2a78d6;
+  --flag-cor:#0e7c86;--flag-cor-bg:rgba(14,124,134,.10);--flag-card:#8a6100;--flag-card-bg:rgba(191,135,0,.13);
+  --flag-len:#57606a;--flag-len-bg:rgba(87,96,106,.10);--g-cc:rgba(14,124,134,.10);--ycard:#bf8700;--rcard:#c9302c;
   color-scheme:light;
 }
 *{box-sizing:border-box}
@@ -74,6 +78,7 @@ table.grid{border-collapse:separate;border-spacing:0;width:max-content;min-width
 .grid th.gl-mo{background:linear-gradient(var(--g-mo),var(--g-mo)),var(--bg);color:var(--ink2)}
 .grid th.gl-goals{background:linear-gradient(var(--g-goals),var(--g-goals)),var(--bg);color:var(--ink2)}
 .grid th.gl-fh{background:linear-gradient(var(--g-fh),var(--g-fh)),var(--bg);color:var(--ink2)}
+.grid th.gl-cc{background:linear-gradient(var(--g-cc),var(--g-cc)),var(--bg);color:var(--ink2)}
 .grid td{padding:6px 5px;border-bottom:1px solid var(--line);text-align:center;vertical-align:middle;background:var(--bg)}
 .grid .stk{position:sticky;z-index:2}
 .grid th.stk{z-index:4}
@@ -108,6 +113,15 @@ td.goalnow .tn::after{content:" GOAL";font-size:10px;font-weight:800;color:var(-
 .fl.busy{background:var(--flag-busy-bg);color:var(--flag-busy)}
 .fl.quiet{background:var(--flag-quiet-bg);color:var(--flag-quiet)}
 .fl.val{background:var(--flag-val-bg);color:var(--flag-val)}
+.fl.cor{background:var(--flag-cor-bg);color:var(--flag-cor)}
+.fl.crd{background:var(--flag-card-bg);color:var(--flag-card)}
+.fl.len{background:var(--flag-len-bg);color:var(--flag-len)}
+.yc{display:inline-block;width:8px;height:11px;border-radius:1.5px;background:var(--ycard);vertical-align:-1px;margin-right:3px}
+.yc.r{background:var(--rcard)}
+.refn{font-size:12.5px;white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis;display:block}
+.hot{color:var(--flag-cor);font-weight:700}
+.strict{color:var(--flag-card);font-weight:600}
+.lenient{color:var(--flag-len);font-weight:600}
 .sq{display:inline-block;min-width:46px;padding:3px 4px 2px;border-radius:6px;border:1px solid var(--line);line-height:1.15;vertical-align:middle}
 .sq .sf{font-size:13.5px;font-weight:600}
 .sq .sb{font-size:11.5px;color:inherit;opacity:.8}
@@ -185,6 +199,7 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
     <div class="chips" id="presets" role="group" aria-label="Column sets">
       <button data-p="goals" title="Match, live stats and every goals square">Goal markets</button>
       <button data-p="mo" title="Match, live stats and Home / Draw / Away squares">Match odds</button>
+      <button data-p="cc" title="Match, live stats, corners, cards and the referee">Corners &amp; cards</button>
       <button data-p="all" title="Every column">All</button>
       <button data-p="custom" title="Your saved column set">Custom</button>
     </div>
@@ -269,14 +284,17 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
     <li><b>How our fair price is made</b>: each side's expected goals are fitted to the Betfair prices at the off (else the 7am prices, else NewModel xG). Then every remaining minute is played out with how goals really arrive (more after half-time, lots in added time) and how the score changes things (the side behind late scores more). Red cards and live xG adjust it. Fitted and checked on FTS's results file: 47,924 games since 2021.</li>
     <li><b>How much to trust it</b>: on 10,433 games from this season (not used to fit it), Betfair's half-time prices were slightly more accurate than ours, and backing every green goal square at half-time made no reliable profit. So a few % of value is mostly noise. Every reading is saved so we can test it on our own games.</li>
     <li><b>O2.5 move</b>: Over 2.5 at 7am &rarr; the last price before kick-off (green = shortened). Ian picks games where it has come in.</li>
-    <li><b>Flags</b> are rules of thumb, not tested yet: <b>&#9733; Goals value</b> = both of the next two goal squares green, one 5%+ at 1.7 or bigger (Ian's rule). <b>Fav behind, on top</b> = the favourite is losing after 15' but leads xG by 0.4+ (or shots by 4+) and isn't behind on shots on target. <b>xG &gt; goals</b> = after 20', total xG at least 0.9 more than the goals. <b>Quiet</b> = after 30', total xG under 0.35 and at most one shot on target.</li>
+    <li><b>Flags</b>: the goals ones are rules of thumb, not tested yet (the corners and cards ones are tested: see below). <b>&#9733; Goals value</b> = both of the next two goal squares green, one 5%+ at 1.7 or bigger (Ian's rule). <b>Fav behind, on top</b> = the favourite is losing after 15' but leads xG by 0.4+ (or shots by 4+) and isn't behind on shots on target. <b>xG &gt; goals</b> = after 20', total xG at least 0.9 more than the goals. <b>Quiet</b> = after 30', total xG under 0.35 and at most one shot on target.</li>
+    <li><b>Corners</b>: corners so far, and underneath the corners each side is expected to win in the <b>next 10 minutes</b> (a normal side: 0.55). It comes from what drove corners in 1,551 games with every event logged (StatsBomb's free data: 2015/16 Premier League, La Liga, Serie A, Ligue 1): who has had the ball and the box touches over the last 10 minutes, the side's corner rate so far, and the score (the side behind wins about 11% more, the side ahead about 17% fewer). xG and shots added nothing once possession and box touches were known. <b>Corners: team</b> flag = that side is expected 0.75+: in leagues the model wasn't fitted on, those sides won 1.5&times; the normal corners, and at least one in the next 10 minutes 51&ndash;56% of the time against 39% normally. Pressure moves corners to the side pressing; the <em>match total</em> barely changes (1.1&ndash;1.2&times;), so it says more about who wins the next corner than about total corner lines.</li>
+    <li><b>Cards</b>: yellow (red) cards, and underneath the fouls with &times; = fouls so far against what's normal by now in this league. In the same games, fouls were the only live sign of cards to come: a game 25%+ over the league's fouls with one goal or less in it went on to 1.16&times; the normal yellows from 60' and 1.38&times; from 70'. Cards already shown said <em>nothing</em> about cards still to come, and a 2-goal gap cut them by about 18%. <b>Cards brewing</b> flag = from 55', fouls 1.25&times; the league norm or more, goal gap 0 or 1. League norms start from football-data.co.uk 2025/26 for the big five and are learned from the board's own finished games for every other league (5 games before the flag is used).</li>
+    <li><b>Referee</b>: the referee's yellow cards a game over their career (SofaScore), and &times; against the other referees the board has seen in that league (shrunk towards the league average, so a referee with few games doesn't stand out by luck). <b>Strict ref</b> = &times;1.10 or more, <b>Lenient ref</b> = &times;0.90 or less (needs 20+ games and 3 other referees seen in the league). Tested on Premier League games 2005&ndash;2026 using only each referee's earlier games: strict referees gave 13% more yellows (5+ yellows 30% of games vs 26%), lenient ones 20% fewer (5+ yellows 14%). Bookmakers and Betfair know who the referee is too, so this is context, not an edge on its own.</li>
     <li>xG and xG on target are only available in leagues where SofaScore has them. Elsewhere you still get shots, shots on target and momentum.</li>
   </ul>
 </details>
 <footer id="foot">FTS &middot; in-play board &middot; live stats: SofaScore (unofficial) &middot; prices: your Betfair in-play log</footer>
 
 <script>
-window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "1.5"};
+window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "1.6"};
 (function(){
 'use strict';
 var CFG = window.__BOARD || {};
@@ -392,8 +410,28 @@ function flags(g){
     if(tx - goals >= 0.9) out.push(['busy','xG > goals']);
     if(m >= 30 && tx < 0.35 && (!g.sot || g.sot[0] + g.sot[1] <= 1)) out.push(['quiet','Quiet']);
   }
+  // corners + cards (tested: see 'What the columns mean')
+  var cs = cornerSide(g);
+  if(cs) out.push(['cor','Corners: '+shortName(cs==='h' ? g.h : g.a)]);
+  var rk = refKind(g);
+  if(rk==='strict') out.push(['crd','Strict ref']);
+  else if(rk==='lenient') out.push(['len','Lenient ref']);
+  if(g.cd && g.cd.brew) out.push(['crd','Cards brewing']);
   return out;
 }
+var CX_FLAG = 0.75;
+function shortName(n){ n = String(n||''); return n.length > 13 ? n.slice(0,12)+'…' : n; }
+function cornerSide(g){
+  if(!g.cx || g.st!=='live' || !g.cx.n) return null;
+  var h = g.cx.n[0], a = g.cx.n[1];
+  if(Math.max(h, a) < CX_FLAG) return null;
+  return h >= a ? 'h' : 'a';
+}
+function refKind(g){
+  var r = g.ref; if(!r || r.r==null || !(r.bn >= 3) || !(r.g >= 20)) return null;
+  return r.r >= 1.10 ? 'strict' : r.r <= 0.90 ? 'lenient' : null;
+}
+function refSurname(n){ var p = String(n||'').trim().split(/\s+/); return p.length > 1 ? p[0].charAt(0)+'. '+p.slice(1).join(' ') : (p[0]||''); }
 
 // ---------------------------------------------------------------- momentum chart
 function momSvg(mom, w, h, opt){
@@ -519,6 +557,45 @@ function teamName(g, side){
   return '<span class="tn '+(g.fav===side?'fav':'')+'" title="'+esc(n + (g.fav===side ? ' (favourite at the '+(g.fsrc==='off'?'off':'7am price')+')' : ''))+'">'+esc(n)+'</span>'+goalTimes(g, side);
 }
 function selBox(g){ return '<input type="checkbox" class="selbox" data-sel="'+esc(g.k)+'"'+(SEL[g.k]?' checked':'')+' aria-label="Tick this game">'; }
+function cxTip(g){
+  var c = g.cx; if(!c) return '';
+  var t = 'Corners expected in the next 10 min: '+g.h+' '+c.n[0].toFixed(2)+', '+g.a+' '+c.n[1].toFixed(2)+' (a normal side: 0.55)';
+  t += '\nLast '+c.w+' min: corners '+c.c10[0]+'-'+c.c10[1]+', '+g.h+' had '+Math.round(c.ps*100)+'% of the ball'+(c.bs!=null ? ' and '+Math.round(c.bs*100)+'% of the box touches' : '');
+  t += '\nFlag at 0.75+: on 1,551 test games those sides won 1.5x the normal corners (at least one in the next 10 min: 54% vs 39%)';
+  return t;
+}
+function cornerCell(g){
+  if(!g.co) return '<span class="muted">&ndash;</span>';
+  var c = g.cx, side = cornerSide(g);
+  var big = '<div class="big num">'+f0(g.co[0])+' &ndash; '+f0(g.co[1])+'</div>';
+  if(!c) return '<div title="Corners">'+big+'</div>';
+  var nh = '<span class="'+(side==='h'?'hot':'')+'">'+c.n[0].toFixed(1)+'</span>', na = '<span class="'+(side==='a'?'hot':'')+'">'+c.n[1].toFixed(1)+'</span>';
+  return '<div title="'+esc(cxTip(g))+'">'+big+'<div class="sm num">next 10: '+nh+' &ndash; '+na+'</div></div>';
+}
+function cardsCell(g){
+  if(!g.yc && !g.rc && !g.fo) return '<span class="muted">&ndash;</span>';
+  var y = g.yc || [0,0], r = g.rc || [0,0];
+  var side = function(i){ return '<span class="yc"></span>'+f0(y[i]) + (r[i] ? ' <span class="yc r"></span>'+f0(r[i]) : ''); };
+  var top = g.yc ? '<div class="num" style="white-space:nowrap">'+side(0)+' &ndash; '+side(1)+'</div>' : '<div class="muted">&ndash;</div>';
+  var sub = '';
+  if(g.fo){
+    var fr = g.cd && g.cd.fr, hot = g.cd && g.cd.brew;
+    sub = '<div class="sm num"'+(g.cd ? ' title="'+esc('Fouls '+f0(g.fo[0])+'-'+f0(g.fo[1])+': '+fr.toFixed(2)+'x what\'s normal by now in this league ('+g.cd.fn+' a game'+(g.cd.t?'':', not learned yet')+').\nYellows still to come: about '+g.cd.rem.toFixed(1)+' (normal '+g.cd.remn.toFixed(1)+')')+'"' : '')+'>fouls '+f0(g.fo[0]+g.fo[1])+(fr ? ' <span class="'+(hot?'strict':'')+'">&times;'+fr.toFixed(2)+'</span>' : '')+'</div>';
+  }
+  return top + sub;
+}
+function refTip(g){
+  var r = g.ref; if(!r) return '';
+  var t = 'Referee '+r.n+': '+r.ypg.toFixed(2)+' yellows a game over '+r.g+' games (SofaScore, career)';
+  if(r.r!=null) t += '\nAgainst the other referees seen in this league ('+r.bn+(r.bn<3?' - too few to judge yet':'')+', '+r.b.toFixed(2)+' a game): x'+r.r.toFixed(2)+' (shrunk towards the league average)';
+  t += '\nStrict = x1.10 or more, lenient = x0.90 or less. Premier League 2005-2026: strict referees gave 13% more yellows, lenient 20% fewer.';
+  return t;
+}
+function refCell(g){
+  var r = g.ref; if(!r) return '<span class="muted">&ndash;</span>';
+  var k = refKind(g);
+  return '<div title="'+esc(refTip(g))+'"><span class="refn">'+esc(refSurname(r.n))+'</span><div class="sm num"><span class="'+(k||'')+'">'+r.ypg.toFixed(1)+'/g'+(r.r!=null && r.bn>=3 ? ' &times;'+r.r.toFixed(2) : '')+'</span></div></div>';
+}
 
 // ---------------------------------------------------------------- the columns
 var SQK = ['h','d','a','OU05','OU15','OU25','OU35','OU45','FH05','FH15'];
@@ -538,6 +615,9 @@ var COLS = [
   {id:'mom', lab:'Momentum', name:'Momentum', grp:'live', cls:'mom', cell:function(g){ return momSvg(g.mom, 120, 32); }, sv:mom10},
   {id:'shh', lab:'Shots H', name:'Home shots', grp:'live', cell:function(g){ return pairCell(g,'sh','sot',0); }, sv:function(g){ return g.sh ? g.sh[0] : null; }},
   {id:'sha', lab:'Shots A', name:'Away shots', grp:'live', cell:function(g){ return pairCell(g,'sh','sot',1); }, sv:function(g){ return g.sh ? g.sh[1] : null; }},
+  {id:'cor', lab:'Corners', name:'Corners (+ expected next 10 min)', grp:'cc', title:'Corners so far; underneath, the corners each side is expected to win in the next 10 minutes (normal 0.55)', cell:cornerCell, sv:function(g){ return g.cx ? Math.max(g.cx.n[0], g.cx.n[1]) : null; }},
+  {id:'crd', lab:'Cards', name:'Cards + fouls', grp:'cc', title:'Yellow (and red) cards; underneath, fouls and how that compares with what is normal by now in this league', cell:cardsCell, sv:function(g){ return g.yc ? g.yc[0]+g.yc[1] : null; }},
+  {id:'ref', lab:'Referee', name:'Referee (yellows a game)', grp:'cc', title:'The referee\'s yellow cards a game (career), against the other referees seen in this league', cell:refCell, sv:function(g){ return g.ref ? (g.ref.r!=null ? g.ref.r : g.ref.ypg/4.2) : null; }},
   {id:'h', lab:'Home', name:'Home (win)', grp:'mo', cell:function(g){ return priceCell(g,'h'); }, sv:function(g){ return sqV(g,'h'); }},
   {id:'d', lab:'Draw', name:'Draw (lay)', grp:'mo', cell:function(g){ return priceCell(g,'d'); }, sv:function(g){ return sqV(g,'d'); }},
   {id:'a', lab:'Away', name:'Away (win)', grp:'mo', cell:function(g){ return priceCell(g,'a'); }, sv:function(g){ return sqV(g,'a'); }}
@@ -545,11 +625,12 @@ var COLS = [
 ['OU05','OU15','OU25','OU35','OU45'].forEach(function(k){ COLS.push({id:k, lab:lineLab(k).replace('O','O'), name:'Over '+k[2]+'.5', grp:'goals', cell:function(g){ return lineCell(g,k); }, sv:function(g){ return sqV(g,k); }}); });
 ['FH05','FH15'].forEach(function(k){ COLS.push({id:k, lab:'FH '+lineLab(k).slice(3), name:'First half over '+k[2]+'.5', grp:'fh', cell:function(g){ return lineCell(g,k); }, sv:function(g){ return sqV(g,k); }}); });
 var COLBY = {}; COLS.forEach(function(c){ COLBY[c.id] = c; });
-var GRP = {match:'Match', model:'FTS / prices', live:'Live stats', mo:'Match odds squares', goals:'Goals squares', fh:'First-half squares'};
+var GRP = {match:'Match', model:'FTS / prices', live:'Live stats', cc:'Corners & cards', mo:'Match odds squares', goals:'Goals squares', fh:'First-half squares'};
 var BASE = ['sel','min','home','score','away','flags','pxg','xgh','xga','mom','shh','sha'];
 var PRESETS = {
   goals: BASE.concat(['OU05','OU15','OU25','OU35','OU45','FH05','FH15']),
   mo: BASE.concat(['h','d','a','o25mv']),
+  cc: BASE.concat(['cor','crd','ref']),
   all: COLS.map(function(c){ return c.id; }).filter(function(id){ return id!=='ko' && id!=='lg'; })
 };
 function sqV(g, k){ var e = sqOf(g, k); return e && e.v!=null ? e.v : null; }
@@ -575,6 +656,21 @@ var FIELDS = [
   {id:'sot', lab:'Shots on target (total)', t:'num', get:function(g){ return g.sot ? g.sot[0]+g.sot[1] : null; }},
   {id:'sh', lab:'Shots (total)', t:'num', get:function(g){ return g.sh ? g.sh[0]+g.sh[1] : null; }},
   {id:'mom10', lab:'Momentum last 10 min (+ home, - away)', t:'num', get:mom10},
+  {id:'co', lab:'Corners (total)', t:'num', get:function(g){ return g.co ? g.co[0]+g.co[1] : null; }},
+  {id:'coh', lab:'Home corners', t:'num', get:function(g){ return g.co ? g.co[0] : null; }},
+  {id:'coa', lab:'Away corners', t:'num', get:function(g){ return g.co ? g.co[1] : null; }},
+  {id:'cxm', lab:'Corners expected next 10 min (busier side)', t:'num', get:function(g){ return g.cx ? Math.max(g.cx.n[0], g.cx.n[1]) : null; }},
+  {id:'cxt', lab:'Corners expected next 10 min (both sides)', t:'num', get:function(g){ return g.cx ? +(g.cx.n[0] + g.cx.n[1]).toFixed(2) : null; }},
+  {id:'yc', lab:'Yellow cards (total)', t:'num', get:function(g){ return g.yc ? g.yc[0]+g.yc[1] : null; }},
+  {id:'fo', lab:'Fouls (total)', t:'num', get:function(g){ return g.fo ? g.fo[0]+g.fo[1] : null; }},
+  {id:'fr', lab:'Fouls vs league norm (x)', t:'num', get:function(g){ return g.cd ? g.cd.fr : null; }},
+  {id:'ycr', lab:'Yellows still to come (expected)', t:'num', get:function(g){ return g.cd ? g.cd.rem : null; }},
+  {id:'refy', lab:'Referee yellows a game', t:'num', get:function(g){ return g.ref ? g.ref.ypg : null; }},
+  {id:'refr', lab:'Referee vs league (x)', t:'num', get:function(g){ return g.ref && g.ref.bn >= 3 ? g.ref.r : null; }},
+  {id:'fcor', lab:'Corners flag', t:'bool', get:function(g){ return !!cornerSide(g); }},
+  {id:'fstrict', lab:'Strict ref', t:'bool', get:function(g){ return refKind(g)==='strict'; }},
+  {id:'flen', lab:'Lenient ref', t:'bool', get:function(g){ return refKind(g)==='lenient'; }},
+  {id:'fbrew', lab:'Cards brewing', t:'bool', get:function(g){ return !!(g.cd && g.cd.brew); }},
   {id:'best', lab:'Best value % (any square)', t:'num', get:bestVal},
   {id:'o25mv', lab:'O2.5 move 7am to off', t:'num', get:o25Move},
   {id:'sel', lab:'Ticked', t:'bool', get:function(g){ return !!SEL[g.k]; }},
@@ -653,8 +749,11 @@ function detail(g){
   var mom = g.mom ? '<div class="chart" data-k="'+esc(g.k)+'">'+momSvg(g.mom, w, 90, {id:'mc', bars:true})+'<div class="tip" hidden></div></div>' : '<div class="muted">No momentum data.</div>';
   var bars = bar('Possession %', g.po) + bar('xG', g.xg, true) + bar('xG on target', g.xgot, true) + bar('Shots', g.sh) +
              bar('Shots on target', g.sot) + bar('Big chances', g.bc) + bar('Corners', g.co) + bar('Saves', g.sv) +
-             bar('Touches in the box', g.tb) + bar('Red cards', g.rc);
+             bar('Touches in the box', g.tb) + bar('Yellow cards', g.yc) + bar('Red cards', g.rc) + bar('Fouls', g.fo);
   var kv = [];
+  if(g.cx) kv.push(['Corners next 10 min', g.cx.n[0].toFixed(2)+' &ndash; '+g.cx.n[1].toFixed(2)+' <span class="muted">(normal 0.55 a side; last '+g.cx.w+' min: corners '+g.cx.c10[0]+'&ndash;'+g.cx.c10[1]+', ball '+Math.round(g.cx.ps*100)+'&ndash;'+Math.round(100-g.cx.ps*100)+'%'+(g.cx.bs!=null?', box touches '+Math.round(g.cx.bs*100)+'&ndash;'+Math.round(100-g.cx.bs*100)+'%':'')+')</span>']);
+  if(g.cd) kv.push(['Cards', 'fouls &times;'+g.cd.fr.toFixed(2)+' the league norm <span class="muted">('+g.cd.fn+' a game'+(g.cd.t?'':', still learning this league')+')</span> &middot; yellows still to come ~'+g.cd.rem.toFixed(1)+' <span class="muted">(normal '+g.cd.remn.toFixed(1)+')</span>']);
+  if(g.ref) kv.push(['Referee', esc(g.ref.n)+' &middot; '+g.ref.ypg.toFixed(2)+' yellows a game ('+g.ref.g+' games)'+(g.ref.bn>=3 ? ' &middot; &times;'+g.ref.r.toFixed(2)+' the league <span class="muted">('+g.ref.b.toFixed(2)+', '+g.ref.bn+' referees)</span>' : ' <span class="muted">(league comparison once 3+ referees are seen)</span>')]);
   if(g.gl && g.gl.length) kv.push(['Goals', g.gl.map(function(x){ return (x[4]?'~':'')+esc(x[0]||'?')+' '+esc(x[1]==='h'?g.h:g.a)+(x[2]==='p'?' (pen)':x[2]==='og'?' (og)':''); }).join(', ')]);
   if(g.pxh!=null) kv.push(['FTS pre-match xG', f2(g.pxh)+' &ndash; '+f2(g.pxa)]);
   if(g.fair) kv.push(['FTS fair odds H/D/A', [g.fair.h,g.fair.d,g.fair.a].map(pr).join(' / ')]);
@@ -792,6 +891,10 @@ function render(){
     var note = stateNote(g);
     var xgTxt = g.xg ? '<span>xG <b class="num">'+f2(g.xg[0])+'</b>'+(g.xgot?' <span class="muted">('+f2(g.xgot[0])+')</span>':'')+' &ndash; <b class="num">'+f2(g.xg[1])+'</b>'+(g.xgot?' <span class="muted">('+f2(g.xgot[1])+')</span>':'')+'</span>' : '<span class="muted">'+(g.pxg!=null ? 'pre xG '+f2(g.pxg) : '')+'</span>';
     var shTxt = g.sh ? '<span>Shots <b class="num">'+f0(g.sh[0])+'</b>'+(g.sot?' <span class="muted">('+f0(g.sot[0])+')</span>':'')+' &ndash; <b class="num">'+f0(g.sh[1])+'</b>'+(g.sot?' <span class="muted">('+f0(g.sot[1])+')</span>':'')+'</span>' : '<span></span>';
+    var ccTxt = '';
+    if(g.co) ccTxt += '<span title="'+esc(cxTip(g))+'">Corners <b class="num">'+f0(g.co[0])+'&ndash;'+f0(g.co[1])+'</b>'+(g.cx ? ' <span class="muted">(next 10: '+g.cx.n[0].toFixed(1)+'&ndash;'+g.cx.n[1].toFixed(1)+')</span>' : '')+'</span>';
+    if(g.yc) ccTxt += '<span>Cards <b class="num"><span class="yc"></span>'+f0(g.yc[0])+'&ndash;'+f0(g.yc[1])+'</b>'+(g.rc && (g.rc[0]||g.rc[1]) ? ' <span class="yc r"></span>'+f0(g.rc[0])+'&ndash;'+f0(g.rc[1]) : '')+'</span>';
+    if(g.ref) ccTxt += '<span title="'+esc(refTip(g))+'">Ref <b>'+esc(refSurname(g.ref.n))+'</b> <span class="num muted">'+g.ref.ypg.toFixed(1)+'/g</span></span>';
     var sqRow = (g.vs && g.vs.sq) ? '<div class="c5 sqs" style="flex-wrap:wrap">'+SQK.map(function(k){ return square(g, k, {h:'Home',d:'Draw',a:'Away'}[k] || lineLab(k)); }).join('')+'</div>' : '';
     var pxs = (g.px || g.off || g.p7) ? ['h','d','a'].map(function(k){ var v = (g.px&&g.px[k]) || (g.off&&g.off[k]) || (g.p7&&g.p7[k]); return pr(v) || '–'; }).join(' / ') : '';
     var pxLab = g.px ? 'MO' : g.off ? 'MO at off' : g.p7 ? 'MO 7am' : '';
@@ -799,6 +902,7 @@ function render(){
       '<div class="c1">'+selBox(g)+timeCell(g)+'<span class="lg">'+esc(g.lg)+(note?' &middot; '+note:'')+'</span>'+(isLive(g)||isFin(g)?'<span class="num">'+esc(g.ko)+'</span>':'')+'</div>'+
       '<div class="c2"><div class="team r'+(flashing(g,'h')?' goalnow':'')+'">'+teamName(g,'h')+'</div><div>'+scoreCell(g)+'</div><div class="team'+(flashing(g,'a')?' goalnow':'')+'">'+teamName(g,'a')+'</div></div>'+
       ((g.xg||g.sh||g.pxg!=null) ? '<div class="c3">'+xgTxt+shTxt+'</div>' : '')+
+      (ccTxt ? '<div class="c3" style="margin-top:3px">'+ccTxt+'</div>' : '')+
       (g.mom ? '<div class="c4">'+momSvg(g.mom, Math.min(560, (window.innerWidth||360) - 58), 30)+'</div>' : '')+
       (sqRow || (pxs ? '<div class="c5"><span>'+pxLab+' <b class="num">'+pxs+'</b></span></div>' : ''))+
       (fl.length ? '<div class="c5">'+flagsCell(fl)+'</div>' : '')+
