@@ -326,11 +326,11 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
 <footer id="foot">FTS &middot; in-play board &middot; live stats: SofaScore (unofficial) &middot; prices: your Betfair in-play log</footer>
 
 <script>
-window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "2.0.1"};
+window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "2.1.0"};
 (function(){
 'use strict';
 var CFG = window.__BOARD || {};
-var BOARD = null, lastApi = 0, OPEN = {}, CHECKED = 0;
+var BOARD = null, lastApi = 0, OPEN = {}, CHECKED = 0, SRC = '', cfFails = 0, cfDownUntil = 0;
 var UI = {f:'now', lg:'', sort:'ko', flagsOnly:false, selOnly:false, q:'', val:'', preset:'all', cols:null, custom:null,
           filters:[], flogic:'and', flash:60, sortCol:'', sortDir:1, alert:''};
 function ls(k,v){ try{ if(v===undefined){ return localStorage.getItem(k); } localStorage.setItem(k,v); }catch(e){ return null; } }
@@ -362,12 +362,29 @@ function b64json(c){
   catch(e){ t = atob(b); }
   return JSON.parse(t);
 }
-function load(){
-  var qs = new URLSearchParams(location.search), src = qs.get('src');
-  var p;
-  if(src){ p = getJSON(src + (src.indexOf('?')>=0?'&':'?') + 't=' + Date.now()); }
-  else if(CFG.raw){
-    p = getJSON(CFG.raw + '?t=' + Date.now()).then(function(b){
+// v2.1: the Cloudflare relay first (the VM sends it every update, ~30 s while games are on; no cache), GitHub as
+// the fallback (its raw copy can be ~5 min behind, so the API is asked when it looks old)
+function cfLoad(){
+  var since = BOARD ? BOARD.generated : 0;
+  return fetch(CFG.cf + '?since=' + since, {cache:'no-store'}).then(function(r){
+    if(r.status === 204) return BOARD || ghLoad();
+    if(!r.ok) throw new Error('relay ' + r.status);
+    return r.json().then(function(b){ if(b) b.__src = 'relay'; return b; });
+  }).then(function(b){
+    cfFails = 0;
+    if(b && b.games && b.live > 0 && nowS() - b.generated > 300){     // relay stuck: see whether GitHub is newer
+      return ghLoad().then(function(g){ return (g && g.games && g.generated > b.generated) ? g : b; });
+    }
+    return b;
+  }, function(){
+    cfFails++;
+    if(cfFails >= 3){ cfDownUntil = Date.now() + 300000; cfFails = 0; }
+    return ghLoad();
+  });
+}
+function ghLoad(){
+  if(!CFG.raw) return Promise.resolve(null);
+  return getJSON(CFG.raw + '?t=' + Date.now()).then(function(b){
       var old = !b || (nowS() - b.generated > 200 && b.live > 0) || (BOARD && b.generated < BOARD.generated);
       if(old && CFG.api && Date.now() - lastApi > 150000){
         lastApi = Date.now();
@@ -377,14 +394,22 @@ function load(){
         });
       }
       return b;
-    });
-  } else { p = Promise.resolve(null); }
+    }).then(function(b){ if(b && b.games && !b.__src) b.__src = 'github'; return b; });
+}
+function load(){
+  var qs = new URLSearchParams(location.search), src = qs.get('src');
+  var p;
+  if(src){ p = getJSON(src + (src.indexOf('?')>=0?'&':'?') + 't=' + Date.now()); }
+  else if(CFG.cf && Date.now() >= cfDownUntil){ p = cfLoad(); }
+  else { p = ghLoad(); }
   // GitHub's cache can hand back a copy a minute or two older than the one already showing: never go backwards
   return p.then(function(b){
-    if(b && b.games){ CHECKED = nowS(); if(!BOARD || b.generated >= BOARD.generated){ BOARD = b; checkAlerts(); } }
+    if(b && b === BOARD){ CHECKED = nowS(); updText(); return; }      // nothing new: no redraw
+    if(b && b.games){ CHECKED = nowS(); if(!BOARD || b.generated >= BOARD.generated){ BOARD = b; SRC = b.__src || ''; checkAlerts(); } }
     render();
   });
 }
+function pollMs(){ return (CFG.cf && Date.now() >= cfDownUntil && BOARD && BOARD.live > 0) ? 15000 : 60000; }
 
 // ---------------------------------------------------------------- goals: times + flash
 var LASTG = {}, FLASH = {};      // per game: goals per side last time we drew it; when each side's flash started (ms)
@@ -1044,8 +1069,11 @@ function updText(){
   if(!BOARD) return;
   var age = Math.max(0, nowS() - BOARD.generated);
   $('upd').textContent = 'data ' + (age < 90 ? Math.round(age)+'s' : Math.round(age/60)+' min') + ' old' +
-    (CHECKED ? ' · checked ' + new Date(CHECKED*1000).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit', second:'2-digit'}) : '');
-  $('upd').title = 'The VM last published at ' + hm(BOARD.generated) + '. With nothing in play it only re-publishes every 15 min, so the time doesn\'t move between kick-offs.';
+    (CHECKED ? ' · checked ' + new Date(CHECKED*1000).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit', second:'2-digit'}) : '') +
+    (SRC === 'relay' ? ' · live' : SRC === 'github' && CFG.cf ? ' · backup' : '');
+  $('upd').title = 'The VM last published at ' + hm(BOARD.generated) + '. With nothing in play it only re-publishes every 15 min, so the time doesn\'t move between kick-offs.' +
+    (CFG.cf ? (SRC === 'relay' ? ' Read from the fast relay (every ~30 s while games are on; this page checks every 15 s).'
+                               : ' The fast relay didn\'t answer, so this copy came from GitHub (can be a few minutes behind).') : '');
 }
 function headRow(cols){
   return cols.map(function(c){
@@ -1261,11 +1289,11 @@ $('theme').addEventListener('click', function(){
   else { document.documentElement.setAttribute('data-theme','light'); ls('ipb.theme','light'); }
 });
 document.addEventListener('visibilitychange', function(){ if(!document.hidden) load(); });
-setInterval(function(){ if(!document.hidden) load(); }, 60000);
+function poll(){ setTimeout(function(){ Promise.resolve(document.hidden ? null : load()).catch(function(){}).then(poll); }, pollMs()); }
 setInterval(function(){ if(BOARD && !document.hidden){ updText(); } }, 15000);
 var rz; window.addEventListener('resize', function(){ clearTimeout(rz); rz = setTimeout(render, 200); });
 if(!UI.cols){ UI.cols = PRESETS.all.slice(); UI.preset = 'all'; }
-load();
+Promise.resolve(load()).catch(function(){}).then(poll);
 })();
 </script>
 </body>
