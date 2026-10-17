@@ -317,6 +317,7 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
         <li><b>Card</b>: Ian's Trading Card for today, with <b>GO / SKIP</b> from the card's check before kick-off. A skipped trade gets no in-play flags. In play the card's own minimum prices are used: O1.5 drip at 20', 27' and 35' (0-0 only), FH goal at 25' (0-0), late goal at 70', 75' and 80' (while there's been no goal since 70'). <b>Green up: X lead</b> = a Lead &amp; Green (or featured) team has gone ahead. <b>Take your liability out</b> = the first goal came after the drip's first entry. The card's record so far counts trades that &ldquo;landed&rdquo;, not profit.</li>
         <li><b>FTS entries</b>: FTS's trading-entry columns from the NewModel file, for every game they cover: 0-0 at 25' (FH goal), goal by 10' (2nd FH goal), 0-0 at 20' (a goal), goal after 70' and after 80'. Each chance becomes FTS's minimum price (100 &divide; chance). They're well calibrated, so they're fair prices, not an edge, and they picked games no better than the pre-match price did. So the board only flags one when Betfair beats both FTS's minimum and our own fair price. The <em>Entry</em> column shows them all.</li>
         <li><b>HT: no more goals</b>: at half-time, in one of 28 league &times; goals-at-HT combinations where the half-time market has over-priced second-half goals, back Under (goals + 0.5). Picked on past seasons and bet on the next one, it made +5.0% on 3,705 bets in 2024&ndash;26 (with shuffled leagues: &minus;1.1%, p &asymp; 0.005). This season so far it's &minus;10.9% on 445 bets, about 1.5 standard deviations below what's expected, which is still within normal swings. The price log is still checking that FTS's half-time price can really be had, so treat it as a candidate and stake small (0.25&ndash;0.5pt). The minimum shown is the break-even price at that combination's past rate.</li>
+        <li><b>Angle</b> (league angles): moments where one league has beaten the board's own league-blind price since 2021, and kept doing so in the later seasons. Brazil 0-0 at 25' and Brazil / Poland 0-0 at 35' (first-half goal), a 1-goal lead at 70' (another goal: Bundesliga, Poland, Swiss, Ligue 1, Austria, Eredivisie, Premier League; no more goals: J-League, Championship), the Championship after 80' (no more goals), and the Bundesliga after 60' (2+ more goals). The angle's price is our chance plus that league's effect, shrunk towards zero so a small league doesn't stand out by luck. The flag shows only when Betfair is at or above it. Where we could check against real prices (at half-time), Betfair already allowed for about half of each league effect, so expect less than the history suggests. Each one is checked against the logged Betfair prices before it's trusted.</li>
         <li><b>Alerts</b>: choose <em>Alerts: ticked games</em> or <em>all games</em> for a beep (and a browser notification, if you allow it) when a flag turns &check; or a green-up comes. Keep the page open. Every entry is saved, so we can check later whether they made money.</li>
       </ul></li>
     <li>xG and xG on target are only available in leagues where SofaScore has them. Elsewhere you still get shots, shots on target and momentum.</li>
@@ -325,7 +326,7 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
 <footer id="foot">FTS &middot; in-play board &middot; live stats: SofaScore (unofficial) &middot; prices: your Betfair in-play log</footer>
 
 <script>
-window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "1.9"};
+window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "2.0"};
 (function(){
 'use strict';
 var CFG = window.__BOARD || {};
@@ -475,18 +476,21 @@ function mkLab(e){
   var m = /^(OU|FH)(\d)5$/.exec(e.mk||''); if(!m) return e.mk||'';
   return (m[1]==='FH'?'FH ':'')+(e.sd==='u'?'Under ':'Over ')+m[2]+'.5';
 }
-function tsShow(e){ return !!(e.act || e.src!=='fts' || (e.go && e.fo)); }   // FTS's own entries: only when Betfair beats FTS's minimum AND our fair price
-function tsName(e){ return e.src==='fts' ? 'FTS: '+e.nm : e.nm; }
+// FTS's own entries: only when Betfair beats FTS's minimum AND our fair price; league angles: only at or above the angle's price
+function tsShow(e){ return !!(e.act || e.src==='card' || e.src==='ht' || (e.src==='fts' && e.go && e.fo) || (e.src==='lg' && e.go)); }
+function tsName(e){ return e.src==='fts' ? 'FTS: '+e.nm : e.src==='lg' ? 'Angle: '+e.nm : e.nm; }
 function tsTip(e){
   if(e.act) return e.nm;
   var t = tsName(e)+': back '+mkLab(e);
   if(e.b) t += '\nBetfair '+pr(e.b)+(e.old ? ' (old, or taken at another score: not used)' : '');
   else t += '\nNo Betfair price logged for this market right now';
-  if(e.mn) t += '\n'+(e.src==='card' ? "The card's minimum " : e.src==='fts' ? 'FTS minimum (100 / '+e.pc+'%) ' : "Break-even at this cell's past rate ")+pr(e.mn);
-  if(e.f) t += '\nOur fair price '+pr(e.f);
-  if(e.v!=null) t += '\nBetfair '+(e.v>=0?'+':'')+e.v+'% against the minimum';
+  if(e.mn) t += '\n'+(e.src==='card' ? "The card's minimum " : e.src==='fts' ? 'FTS minimum (100 / '+e.pc+'%) ' :
+                      e.src==='lg' ? 'Angle price (our chance + this league\'s effect = '+e.pc+'%) ' : "Break-even at this cell's past rate ")+pr(e.mn);
+  if(e.f) t += '\nOur fair price'+(e.src==='lg' ? ' (league-blind) ' : ' ')+pr(e.f);
+  if(e.v!=null) t += '\nBetfair '+(e.v>=0?'+':'')+e.v+'% against the '+(e.src==='lg' ? 'angle price' : 'minimum');
   if(e.src==='fts') t += '\nFTS entries are fair prices (calibrated), not a tested edge: flagged only when Betfair beats both prices';
-  if(e.x) t += '\nThis league with this many goals at HT: no 2nd-half goal '+e.x.act+'% vs '+e.x.imp+'% priced ('+e.x.n+' games). Candidate system, still being price-checked: stake small';
+  if(e.src==='lg' && e.x) t += '\nThis league at this moment: '+(e.x.d>0?'+':'')+e.x.d+' points over our league-blind chance (shrunk; '+e.x.mp+'% -> '+e.x.ap+'% in '+e.x.n+' games since 2021). Betfair may already price part of it: flagged only when it doesn\'t';
+  if(e.x && e.src==='ht') t += '\nThis league with this many goals at HT: no 2nd-half goal '+e.x.act+'% vs '+e.x.imp+'% priced ('+e.x.n+' games). Candidate system, still being price-checked: stake small';
   return t;
 }
 function tradeFlags(g){
@@ -865,6 +869,7 @@ var FIELDS = [
   {id:'tsv', lab:'Trading entry: Betfair vs minimum %', t:'num', get:tsBestV},
   {id:'tcard', lab:'On the Trading Card', t:'bool', get:function(g){ return !!(g.ct && g.ct.length); }},
   {id:'tht', lab:'HT no-more-goals game (at half-time)', t:'bool', get:function(g){ return !!(g.ts && g.ts.some(function(e){ return e.id==='htu'; })); }},
+  {id:'tlg', lab:'League angle on now', t:'bool', get:function(g){ return !!(g.ts && g.ts.some(function(e){ return e.src==='lg'; })); }},
   {id:'best', lab:'Best value % (any square)', t:'num', get:bestVal},
   {id:'o25mv', lab:'O2.5 move 7am to off', t:'num', get:o25Move},
   {id:'sel', lab:'Ticked', t:'bool', get:function(g){ return !!SEL[g.k]; }},
