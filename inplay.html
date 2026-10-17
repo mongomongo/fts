@@ -278,7 +278,7 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
     <li><b>Goals</b>: the scoring team is coloured green for a minute when a goal comes in (change it with <em>Goal flash</em>). Goal times are under each team: &#9917; 23' 67'p (p = penalty, og = own goal, ~ = minute estimated until SofaScore confirms it).</li>
     <li><b>XG</b>: FTS's modelled total goals before kick-off (NewModel).</li>
     <li><b>xG H / xG A</b>: live expected goals for each side (big), with expected goals on target underneath (small).</li>
-    <li><b>Momentum</b>: SofaScore attack momentum, one bar a minute. Blue above the line is home pressure, orange below is away. The faint line marks half-time.</li>
+    <li><b>Momentum</b>: SofaScore attack momentum, one bar a minute. Blue above the line is home pressure, orange below is away. The faint line marks half-time. Markers show what happened when, <b>home above the chart, away below</b>: &#9679; goal, yellow / red card, teal flag = corner. Hover (or open the game) for the minute and team. Goals and cards come from SofaScore's match events at the real minute; SofaScore doesn't give corner times, so a corner is placed between the two stats refreshes either side of it (give or take a couple of minutes, shown faded), and corners taken before the board found the game aren't timed.</li>
     <li><b>Shots</b>: total shots (big) and shots on target (small).</li>
     <li><b>Value squares</b> (games in play): the top number is <b>our fair price</b>, the bottom one the latest <b>Betfair</b> price from your in-play log. Value = (Betfair &minus; fair) &divide; Betfair &times; 100, the same sum as the FTS tool. <b>Green</b> = value backing, <b>red</b> = none; the deeper the colour, the bigger the gap. The <b>draw</b> uses the <b>lay</b> price and is scored from the lay side (green = laying the draw is value). <b>O0.5&ndash;O4.5</b> and <b>FH O0.5 / O1.5</b> are the goal lines; a line that's already gone is blank. A crossed-out Betfair price is over 3 minutes old or was taken just before a goal, so no value is worked out from it.</li>
     <li><b>How our fair price is made</b>: each side's expected goals are fitted to the Betfair prices at the off (else the 7am prices, else NewModel xG). Then every remaining minute is played out with how goals really arrive (more after half-time, lots in added time) and how the score changes things (the side behind late scores more). Red cards and live xG adjust it. Fitted and checked on FTS's results file: 47,924 games since 2021.</li>
@@ -294,7 +294,7 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
 <footer id="foot">FTS &middot; in-play board &middot; live stats: SofaScore (unofficial) &middot; prices: your Betfair in-play log</footer>
 
 <script>
-window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "1.6"};
+window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "1.7"};
 (function(){
 'use strict';
 var CFG = window.__BOARD || {};
@@ -434,15 +434,62 @@ function refKind(g){
 function refSurname(n){ var p = String(n||'').trim().split(/\s+/); return p.length > 1 ? p[0].charAt(0)+'. '+p.slice(1).join(' ') : (p[0]||''); }
 
 // ---------------------------------------------------------------- momentum chart
+// ---------------------------------------------------------------- chart events (goals, cards, corners)
+function evX(m){                                   // "23'" -> 23, "45+2'" -> 45.2 (1st-half added time), "90+3'" -> 93
+  var r = /^\s*(\d+)(?:\s*\+\s*(\d+))?/.exec(String(m||'')); if(!r) return null;
+  var t = +r[1], a = +(r[2]||0);
+  return t === 45 && a ? 45 + Math.min(a, 9)/10 : t + a;
+}
+function chartEvents(g){
+  var out = [];
+  (g.gl || []).forEach(function(x){ var p = evX(x[0]); if(p!=null) out.push([p, x[1], 'g', x[4] ? 1 : 0, x[0], x[2]]); });
+  (g.ev || []).forEach(function(x){ out.push([x[0], x[1], x[2], x[3], x[4] || '', '']); });
+  return out;
+}
+function evTitle(g, e){
+  var team = e[1]==='h' ? g.h : g.a;
+  var nm = {g:'Goal', c:'Corner', y:'Yellow card', r:'Red card', yr:'Second yellow (red)'}[e[2]] || e[2];
+  if(e[2]==='g' && e[5]==='p') nm = 'Goal (pen)';
+  if(e[2]==='g' && e[5]==='og') nm = 'Own goal (for '+team+')';
+  var mn = e[4] || (e[0] > 45 && e[0] < 46 ? "45+'" : Math.round(e[0])+"'");
+  return nm + ' ' + (e[3] ? 'about ' : '') + mn + ' ' + (e[2]==='g' && e[5]==='og' ? '' : team) +
+    (e[3] ? (e[2]==='g' ? ' (minute estimated until SofaScore confirms it)' : ' (time worked out from the stats, give or take a couple of minutes)') : '');
+}
+function evMarks(g, evs, x, w, h, lane){
+  if(!evs || !evs.length) return '';
+  var s = lane, out = [], ord = {c:0, y:1, yr:1, r:1, g:2};
+  evs.slice().sort(function(a,b){ return (ord[a[2]]||0) - (ord[b[2]]||0) || a[0]-b[0]; }).forEach(function(e){
+    var cx = Math.max(s*0.5, Math.min(w - s*0.5, x(e[0]))), cy = e[1]==='h' ? lane/2 : h - lane/2;
+    var op = e[3] ? ' opacity="0.55"' : '', t = '<title>'+esc(evTitle(g, e))+'</title>', sh = '';
+    if(e[2]==='g'){
+      var rr = Math.max(1.8, s*0.42);
+      sh = e[5]==='og' ? '<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="'+rr.toFixed(1)+'" fill="none" stroke="var(--ink)" stroke-width="1.2"/>'
+                       : '<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="'+rr.toFixed(1)+'" fill="var(--ink)" stroke="var(--bg)" stroke-width="0.8"/>';
+    } else if(e[2]==='c'){
+      var fh = Math.max(3, s*0.8), fw = Math.max(2.5, s*0.5), top = cy - fh/2;
+      sh = (s >= 9 ? '<line x1="'+cx.toFixed(1)+'" x2="'+cx.toFixed(1)+'" y1="'+top.toFixed(1)+'" y2="'+(top+fh).toFixed(1)+'" stroke="var(--flag-cor)" stroke-width="1"/>' : '') +
+        '<path d="M'+cx.toFixed(1)+','+top.toFixed(1)+'L'+(cx+fw).toFixed(1)+','+(top+fh*0.28).toFixed(1)+'L'+cx.toFixed(1)+','+(top+fh*0.56).toFixed(1)+'Z" fill="var(--flag-cor)"/>';
+    } else {
+      var rw = Math.max(2.2, s*0.5), rh = Math.max(3, s*0.75), rx0 = cx - rw/2, ry0 = cy - rh/2;
+      var col = e[2]==='y' ? 'var(--ycard)' : 'var(--rcard)';
+      sh = '<rect x="'+rx0.toFixed(1)+'" y="'+ry0.toFixed(1)+'" width="'+rw.toFixed(1)+'" height="'+rh.toFixed(1)+'" rx="0.8" fill="'+col+'"/>';
+      if(e[2]==='yr') sh = '<rect x="'+(rx0-1.5).toFixed(1)+'" y="'+(ry0-0.5).toFixed(1)+'" width="'+rw.toFixed(1)+'" height="'+rh.toFixed(1)+'" rx="0.8" fill="var(--ycard)"/>' + sh;
+    }
+    out.push('<g class="evm" data-t="'+e[2]+'" data-s="'+e[1]+'"'+op+'>'+t+sh+'</g>');
+  });
+  return out.join('');
+}
 function momSvg(mom, w, h, opt){
   opt = opt || {};
   if(!mom || !mom.length) return '<span class="muted">&ndash;</span>';
-  var last = mom[mom.length-1][0], span = Math.max(90, Math.ceil(last) + 1), mid = h/2;
+  var lane = opt.ev ? (opt.lane || 6) : 0, ch = h - 2*lane;     // home events in a lane above the chart, away below
+  var last = mom[mom.length-1][0], span = Math.max(90, Math.ceil(last) + 1), mid = lane + ch/2;
+  (opt.ev || []).forEach(function(e){ if(e[0] + 1 > span) span = Math.ceil(e[0]) + 1; });
   var x = function(m){ return (m - 1) / (span - 1) * w; };
-  var y = function(v){ return Math.max(-100, Math.min(100, v)) / 100 * (mid - 1); };
+  var y = function(v){ return Math.max(-100, Math.min(100, v)) / 100 * (ch/2 - 1); };
   var pts = mom.filter(function(p){ return p[0] % 1 === 0; });   // 45.5 / 90.5 are period markers
   var parts = [];
-  parts.push('<line x1="'+x(46).toFixed(1)+'" x2="'+x(46).toFixed(1)+'" y1="1" y2="'+(h-1)+'" stroke="var(--grid)" stroke-width="1"/>');
+  parts.push('<line x1="'+x(46).toFixed(1)+'" x2="'+x(46).toFixed(1)+'" y1="'+(lane+1)+'" y2="'+(lane+ch-1)+'" stroke="var(--grid)" stroke-width="1"/>');
   if(opt.bars){
     var bw = Math.max(1, w/span - (w/span > 3 ? 0.8 : 0));
     pts.forEach(function(p){
@@ -458,10 +505,22 @@ function momSvg(mom, w, h, opt){
     parts.push('<path d="'+area(1)+'" fill="var(--home)"/><path d="'+area(-1)+'" fill="var(--away)"/>');
   }
   parts.push('<line x1="0" x2="'+w+'" y1="'+mid+'" y2="'+mid+'" stroke="var(--base)" stroke-width="1"/>');
+  if(opt.ev && opt.g) parts.push(evMarks(opt.g, opt.ev, x, w, h, lane));
   var last10 = pts.slice(-10).map(function(p){ return p[1]; });
   var avg = last10.length ? last10.reduce(function(a,b){return a+b;},0)/last10.length : 0;
   var lbl = 'Momentum to '+Math.floor(last)+"'. Last 10 min: "+(Math.abs(avg)<8 ? 'even' : (avg>0 ? 'home' : 'away')+' on top ('+(avg>0?'+':'')+Math.round(avg)+')');
+  if(opt.ev && opt.ev.length) lbl += '. Above the line: home goals, cards, corners; below: away';
   return '<svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" role="img" aria-label="'+esc(lbl)+'"'+(opt.id?' id="'+opt.id+'"':'')+'><title>'+esc(lbl)+'</title>'+parts.join('')+'</svg>';
+}
+function evLegend(g){
+  var n = chartEvents(g).length;
+  var s = '<div class="legend" style="margin-top:4px;font-size:11.5px"><span>Above: <b>'+esc(g.h)+'</b> &middot; below: <b>'+esc(g.a)+'</b></span>'+
+    '<span><svg width="10" height="10" style="vertical-align:-1px"><circle cx="5" cy="5" r="4" fill="var(--ink)"/></svg> goal</span>'+
+    '<span><span class="yc"></span>yellow</span><span><span class="yc r"></span>red</span>'+
+    '<span><svg width="10" height="11" style="vertical-align:-1px"><line x1="2" x2="2" y1="1" y2="10" stroke="var(--flag-cor)"/><path d="M2,1L8,3.5L2,6Z" fill="var(--flag-cor)"/></svg> corner</span>'+
+    '<span class="muted">faded = time worked out from the stats (&plusmn; a couple of minutes)</span>';
+  if(g.evp && g.evp.co) s += '<span class="muted">corners before '+g.evp.m+"' not timed ("+g.evp.co[0]+'&ndash;'+g.evp.co[1]+')</span>';
+  return n ? s + '</div>' : '';
 }
 function mom10(g){ if(!g.mom) return null; var pts = g.mom.filter(function(p){ return p[0] % 1 === 0; }).slice(-10); return pts.length ? pts.reduce(function(a,p){ return a+p[1]; },0)/pts.length : null; }
 
@@ -612,7 +671,7 @@ var COLS = [
   {id:'o25mv', lab:'O2.5 move', name:'O2.5 move (7am to off)', grp:'model', title:'Over 2.5 back: 7am to the last price before kick-off', cell:o25Cell, sv:o25Move},
   {id:'xgh', lab:'xG H', name:'Home xG (live)', grp:'live', cell:function(g){ return pairCell(g,'xg','xgot',0,true); }, sv:function(g){ return g.xg ? g.xg[0] : null; }},
   {id:'xga', lab:'xG A', name:'Away xG (live)', grp:'live', cell:function(g){ return pairCell(g,'xg','xgot',1,true); }, sv:function(g){ return g.xg ? g.xg[1] : null; }},
-  {id:'mom', lab:'Momentum', name:'Momentum', grp:'live', cls:'mom', cell:function(g){ return momSvg(g.mom, 120, 32); }, sv:mom10},
+  {id:'mom', lab:'Momentum', name:'Momentum', grp:'live', cls:'mom', cell:function(g){ return momSvg(g.mom, 120, 40, {ev: chartEvents(g), g: g, lane: 6}); }, sv:mom10},
   {id:'shh', lab:'Shots H', name:'Home shots', grp:'live', cell:function(g){ return pairCell(g,'sh','sot',0); }, sv:function(g){ return g.sh ? g.sh[0] : null; }},
   {id:'sha', lab:'Shots A', name:'Away shots', grp:'live', cell:function(g){ return pairCell(g,'sh','sot',1); }, sv:function(g){ return g.sh ? g.sh[1] : null; }},
   {id:'cor', lab:'Corners', name:'Corners (+ expected next 10 min)', grp:'cc', title:'Corners so far; underneath, the corners each side is expected to win in the next 10 minutes (normal 0.55)', cell:cornerCell, sv:function(g){ return g.cx ? Math.max(g.cx.n[0], g.cx.n[1]) : null; }},
@@ -746,7 +805,7 @@ function bar(lab, v, dec){
 }
 function detail(g){
   var w = Math.min(560, Math.max(260, (window.innerWidth||800) - 120));
-  var mom = g.mom ? '<div class="chart" data-k="'+esc(g.k)+'">'+momSvg(g.mom, w, 90, {id:'mc', bars:true})+'<div class="tip" hidden></div></div>' : '<div class="muted">No momentum data.</div>';
+  var mom = g.mom ? '<div class="chart" data-k="'+esc(g.k)+'">'+momSvg(g.mom, w, 120, {id:'mc', bars:true, ev: chartEvents(g), g: g, lane: 15})+'<div class="tip" hidden></div></div>'+evLegend(g) : '<div class="muted">No momentum data.</div>';
   var bars = bar('Possession %', g.po) + bar('xG', g.xg, true) + bar('xG on target', g.xgot, true) + bar('Shots', g.sh) +
              bar('Shots on target', g.sot) + bar('Big chances', g.bc) + bar('Corners', g.co) + bar('Saves', g.sv) +
              bar('Touches in the box', g.tb) + bar('Yellow cards', g.yc) + bar('Red cards', g.rc) + bar('Fouls', g.fo);
@@ -786,11 +845,18 @@ function wireChart(root){
   var svg = c.querySelector('svg'), tip = c.querySelector('.tip');
   var pts = g.mom.filter(function(p){ return p[0] % 1 === 0; });
   var last = g.mom[g.mom.length-1][0], span = Math.max(90, Math.ceil(last)+1), w = +svg.getAttribute('width');
+  chartEvents(g).forEach(function(e){ if(e[0] + 1 > span) span = Math.ceil(e[0]) + 1; });
   svg.addEventListener('mousemove', function(ev){
     var r = svg.getBoundingClientRect(), xm = (ev.clientX - r.left) / r.width * (span - 1) + 1;
+    var mk = ev.target.closest && ev.target.closest('.evm');
+    if(mk){                                        // over a goal / card / corner marker: say what it is
+      var tt = mk.querySelector('title');
+      tip.hidden = false; tip.style.left = (ev.clientX - r.left)+'px'; tip.style.top = (mk.getAttribute('data-s')==='h' ? 34 : r.height - 2)+'px';
+      tip.textContent = tt ? tt.textContent : ''; return;
+    }
     var best = null; pts.forEach(function(p){ if(!best || Math.abs(p[0]-xm) < Math.abs(best[0]-xm)) best = p; });
     if(!best) return;
-    tip.hidden = false; tip.style.left = ((best[0]-1)/(span-1)*w)+'px'; tip.style.top = '6px';
+    tip.hidden = false; tip.style.left = ((best[0]-1)/(span-1)*w)+'px'; tip.style.top = '20px';
     tip.textContent = best[0] + "'  " + (best[1] >= 0 ? g.h + ' +' + best[1] : g.a + ' +' + (-best[1]));
   });
   svg.addEventListener('mouseleave', function(){ tip.hidden = true; });
@@ -903,7 +969,7 @@ function render(){
       '<div class="c2"><div class="team r'+(flashing(g,'h')?' goalnow':'')+'">'+teamName(g,'h')+'</div><div>'+scoreCell(g)+'</div><div class="team'+(flashing(g,'a')?' goalnow':'')+'">'+teamName(g,'a')+'</div></div>'+
       ((g.xg||g.sh||g.pxg!=null) ? '<div class="c3">'+xgTxt+shTxt+'</div>' : '')+
       (ccTxt ? '<div class="c3" style="margin-top:3px">'+ccTxt+'</div>' : '')+
-      (g.mom ? '<div class="c4">'+momSvg(g.mom, Math.min(560, (window.innerWidth||360) - 58), 30)+'</div>' : '')+
+      (g.mom ? '<div class="c4">'+momSvg(g.mom, Math.min(560, (window.innerWidth||360) - 58), 40, {ev: chartEvents(g), g: g, lane: 6})+'</div>' : '')+
       (sqRow || (pxs ? '<div class="c5"><span>'+pxLab+' <b class="num">'+pxs+'</b></span></div>' : ''))+
       (fl.length ? '<div class="c5">'+flagsCell(fl)+'</div>' : '')+
       (open ? '<div class="det">'+detail(g)+'</div>' : '')+'</div>');
