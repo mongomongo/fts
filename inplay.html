@@ -326,7 +326,7 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
 <footer id="foot">FTS &middot; in-play board &middot; live stats: SofaScore (unofficial) &middot; prices: your Betfair in-play log</footer>
 
 <script>
-window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "2.1.0", "cf": "https://fts-board.memongomemongo.workers.dev/board"};
+window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "2.1.1", "cf": "https://fts-board.memongomemongo.workers.dev/board"};
 (function(){
 'use strict';
 var CFG = window.__BOARD || {};
@@ -1112,10 +1112,17 @@ function render(){
   if(live && age > 360) w.push('Data '+Math.round(age/60)+' min old &ndash; is the VM collector running?');
   if(!live && age > 1800) w.push('No update for '+Math.round(age/60)+' min &ndash; is the VM collector running?');
   if(b.feed_ok === false){
+    // v2.1.1: a refusal (403/429) is SofaScore blocking; anything else is the PC's Edge window not answering,
+    // which the board retries within ~45 s
+    var src = b.src || {}, tried = src.tried || [];
+    var refused = tried.some(function(a){ return a && (a[1] === 403 || a[1] === 429); }) || src.feed_http === 403 || src.feed_http === 429;
+    var okAgo = src.ok_at ? Math.max(0, nowS() - src.ok_at) : null;
+    var since = okAgo != null ? ' (last good update ' + (okAgo < 90 ? Math.round(okAgo) + 's' : Math.round(okAgo/60) + ' min') + ' ago)' : '';
     var lsN = gs.filter(function(g){ return g.msrc==='ls' || g.ssrc==='ls'; }).length;
-    var code = b.src && b.src.feed_http ? ' (HTTP '+esc(b.src.feed_http)+')' : '';
-    w.push(lsN ? 'SofaScore is refusing the VM'+code+' &ndash; minute, score and shots from LiveScore; no xG or momentum until it&rsquo;s back'
-               : 'SofaScore not responding'+code+' &ndash; showing the last stats');
+    var fall = lsN ? ' &ndash; minute and score from LiveScore meanwhile' : ' &ndash; showing the last stats';
+    if(refused) w.push('SofaScore is refusing the PC' + since + fall + '; no new xG or momentum until it&rsquo;s back');
+    else if(okAgo != null && okAgo < 150) w.push('SofaScore missed an update &ndash; retrying' + since);
+    else w.push('SofaScore not answering on the PC (its Edge window) &ndash; retrying' + since + fall);
   }
   $('warn').innerHTML = w.map(function(t){ return '<span class="pill warn">'+t+'</span>'; }).join(' ');
   var sel = $('league'), cur = UI.lg;
