@@ -18,6 +18,7 @@
   --goal:rgba(63,185,80,.42);--goal-ink:#7ee08f;--accent:#3987e5;
   --flag-cor:#4cb8c4;--flag-cor-bg:rgba(76,184,196,.15);--flag-card:#e3b341;--flag-card-bg:rgba(227,179,65,.16);
   --flag-len:#9da7b3;--flag-len-bg:rgba(157,167,179,.13);--g-cc:rgba(76,184,196,.14);--ycard:#e3b341;--rcard:#e5484d;
+  --flag-trd:#e07ab4;--flag-trd-bg:rgba(219,97,162,.17);--g-tr:rgba(219,97,162,.14);
   color-scheme:dark;
 }
 :root[data-theme="light"]{
@@ -32,6 +33,7 @@
   --goal:rgba(26,127,55,.30);--goal-ink:#1a7f37;--accent:#2a78d6;
   --flag-cor:#0e7c86;--flag-cor-bg:rgba(14,124,134,.10);--flag-card:#8a6100;--flag-card-bg:rgba(191,135,0,.13);
   --flag-len:#57606a;--flag-len-bg:rgba(87,96,106,.10);--g-cc:rgba(14,124,134,.10);--ycard:#bf8700;--rcard:#c9302c;
+  --flag-trd:#a8327a;--flag-trd-bg:rgba(191,57,137,.11);--g-tr:rgba(191,57,137,.09);
   color-scheme:light;
 }
 *{box-sizing:border-box}
@@ -79,6 +81,7 @@ table.grid{border-collapse:separate;border-spacing:0;width:max-content;min-width
 .grid th.gl-goals{background:linear-gradient(var(--g-goals),var(--g-goals)),var(--bg);color:var(--ink2)}
 .grid th.gl-fh{background:linear-gradient(var(--g-fh),var(--g-fh)),var(--bg);color:var(--ink2)}
 .grid th.gl-cc{background:linear-gradient(var(--g-cc),var(--g-cc)),var(--bg);color:var(--ink2)}
+.grid th.gl-tr{background:linear-gradient(var(--g-tr),var(--g-tr)),var(--bg);color:var(--ink2)}
 .grid td{padding:6px 5px;border-bottom:1px solid var(--line);text-align:center;vertical-align:middle;background:var(--bg)}
 .grid .stk{position:sticky;z-index:2}
 .grid th.stk{z-index:4}
@@ -116,6 +119,18 @@ td.goalnow .tn::after{content:" GOAL";font-size:10px;font-weight:800;color:var(-
 .fl.cor{background:var(--flag-cor-bg);color:var(--flag-cor)}
 .fl.crd{background:var(--flag-card-bg);color:var(--flag-card)}
 .fl.len{background:var(--flag-len-bg);color:var(--flag-len)}
+.fl.trd{background:var(--flag-trd-bg);color:var(--flag-trd)}
+.fl.trdw{background:transparent;color:var(--ink3);box-shadow:inset 0 0 0 1px var(--line2)}
+.fl.act{background:var(--flag-fav);color:var(--bg)}
+.ent{white-space:nowrap;text-align:left;line-height:1.25}
+.ent+.ent{margin-top:4px}
+.ent .en{font-size:12.5px;font-weight:600}
+.ent.go .en{color:var(--flag-trd)}
+.ent.act .en{color:var(--flag-fav)}
+.pk{font-size:10.5px;font-weight:700;border-radius:4px;padding:0 4px;margin-left:5px}
+.pk.go{background:var(--flag-fav-bg);color:var(--flag-fav)}
+.pk.skip{background:var(--live-bg);color:var(--live)}
+.alertmsg{background:var(--flag-trd-bg);color:var(--flag-trd);font-weight:600;white-space:normal;max-width:min(720px,100%)}
 .yc{display:inline-block;width:8px;height:11px;border-radius:1.5px;background:var(--ycard);vertical-align:-1px;margin-right:3px}
 .yc.r{background:var(--rcard)}
 .refn{font-size:12.5px;white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis;display:block}
@@ -181,6 +196,8 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
   .frow{grid-template-columns:22px 1fr 1fr;grid-auto-rows:auto}
   .frow .lg2{grid-column:2/-1}
   .colgrid{grid-template-columns:repeat(2,minmax(120px,1fr))}
+  .chips{flex-wrap:wrap}
+  .card .ent{white-space:normal}
 }
 </style>
 </head>
@@ -191,6 +208,7 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
     <span class="counts num" id="counts"></span>
     <span class="spacer"></span>
     <span id="warn"></span>
+    <span class="pill alertmsg" id="alertMsg" hidden></span>
     <span class="upd num" id="upd">loading&hellip;</span>
     <button id="refresh" title="Refresh now" aria-label="Refresh now">&#8635;</button>
     <button id="theme" title="Light / dark" aria-label="Switch light or dark">Theme</button>
@@ -200,6 +218,7 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
       <button data-p="goals" title="Match, live stats and every goals square">Goal markets</button>
       <button data-p="mo" title="Match, live stats and Home / Draw / Away squares">Match odds</button>
       <button data-p="cc" title="Match, live stats, corners, cards and the referee">Corners &amp; cards</button>
+      <button data-p="tr" title="Match, live stats, the Trading Card and trading entries (Betfair against the minimum price)">Trading</button>
       <button data-p="all" title="Every column">All</button>
       <button data-p="custom" title="Your saved column set">Custom</button>
     </div>
@@ -236,6 +255,11 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
       <option value="120">Goal flash: 2 min</option>
       <option value="180">Goal flash: 3 min</option>
       <option value="0">Goal flash: off</option>
+    </select>
+    <select id="alert" aria-label="Alerts" title="Beep (and a browser notification, if you allow it) when a trading entry turns ✓ or a green-up / take-your-liability-out moment comes. Keep this page open.">
+      <option value="">Alerts: off</option>
+      <option value="sel">Alerts: ticked games</option>
+      <option value="all">Alerts: all games</option>
     </select>
     <input type="search" id="q" placeholder="Team or league" aria-label="Search">
   </div>
@@ -285,22 +309,29 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
     <li><b>How much to trust it</b>: on 10,433 games from this season (not used to fit it), Betfair's half-time prices were slightly more accurate than ours, and backing every green goal square at half-time made no reliable profit. So a few % of value is mostly noise. Every reading is saved so we can test it on our own games.</li>
     <li><b>O2.5 move</b>: Over 2.5 at 7am &rarr; the last price before kick-off (green = shortened). Ian picks games where it has come in.</li>
     <li><b>Flags</b>: the goals ones are rules of thumb, not tested yet (the corners and cards ones are tested: see below). <b>&#9733; Goals value</b> = both of the next two goal squares green, one 5%+ at 1.7 or bigger (Ian's rule). <b>Fav behind, on top</b> = the favourite is losing after 15' but leads xG by 0.4+ (or shots by 4+) and isn't behind on shots on target. <b>xG &gt; goals</b> = after 20', total xG at least 0.9 more than the goals. <b>Quiet</b> = after 30', total xG under 0.35 and at most one shot on target.</li>
-    <li><b>Corners</b>: corners so far, and underneath the corners each side is expected to win in the <b>next 10 minutes</b> (a normal side: 0.55). It comes from what drove corners in 1,551 games with every event logged (StatsBomb's free data: 2015/16 Premier League, La Liga, Serie A, Ligue 1): who has had the ball and the box touches over the last 10 minutes, the side's corner rate so far, and the score (the side behind wins about 11% more, the side ahead about 17% fewer). xG and shots added nothing once possession and box touches were known. <b>Corners: team</b> flag = that side is expected 0.75+: in leagues the model wasn't fitted on, those sides won 1.5&times; the normal corners, and at least one in the next 10 minutes 51&ndash;56% of the time against 39% normally. Pressure moves corners to the side pressing; the <em>match total</em> barely changes (1.1&ndash;1.2&times;), so it says more about who wins the next corner than about total corner lines.</li>
+    <li><b>Corners</b>: corners so far, and underneath the corners each side is expected to win in the <b>next 10 minutes</b> (a normal side: about 0.5 in the first half, 0.55 in the second, 0.63 just before half-time). It comes from what drove corners in 1,551 games with every event logged (StatsBomb's free data: 2015/16 Premier League, La Liga, Serie A, Ligue 1): who has had the ball and the box touches over the last 10 minutes, the side's corner rate so far, and the score (the side behind wins about 11% more, the side ahead about 17% fewer). xG and shots added nothing once possession and box touches were known. <b>Corners: team</b> flag = that side is expected to win at least 1.35&times; what a normal side would at that stage of the game (about 0.7 corners in the first half, 0.75 in the second, 0.85 just before half-time, when added time makes corners come thicker). That's about 1 side in 12 at any stage. In leagues the model wasn't fitted on, those sides won 1.41&ndash;1.50&times; the normal corners for that stage, and at least one in the next 10 minutes 50&ndash;53% of the time against 39&ndash;40%. Pressure moves corners to the side pressing; the <em>match total</em> barely changes (1.1&ndash;1.2&times;), so it says more about who wins the next corner than about total corner lines.</li>
     <li><b>Cards</b>: yellow (red) cards, and underneath the fouls with &times; = fouls so far against what's normal by now in this league. In the same games, fouls were the only live sign of cards to come: a game 25%+ over the league's fouls with one goal or less in it went on to 1.16&times; the normal yellows from 60' and 1.38&times; from 70'. Cards already shown said <em>nothing</em> about cards still to come, and a 2-goal gap cut them by about 18%. <b>Cards brewing</b> flag = from 55', fouls 1.25&times; the league norm or more, goal gap 0 or 1. League norms start from football-data.co.uk 2025/26 for the big five and are learned from the board's own finished games for every other league (5 games before the flag is used).</li>
     <li><b>Referee</b>: the referee's yellow cards a game over their career (SofaScore), and &times; against the other referees the board has seen in that league (shrunk towards the league average, so a referee with few games doesn't stand out by luck). <b>Strict ref</b> = &times;1.10 or more, <b>Lenient ref</b> = &times;0.90 or less (needs 20+ games and 3 other referees seen in the league). Tested on Premier League games 2005&ndash;2026 using only each referee's earlier games: strict referees gave 13% more yellows (5+ yellows 30% of games vs 26%), lenient ones 20% fewer (5+ yellows 14%). Bookmakers and Betfair know who the referee is too, so this is context, not an edge on its own.</li>
+    <li><b>Trading</b> (column set <em>Trading</em>): three kinds of entry, each flagged only while its moment is on (an entry stays open for 5 minutes). A <b>&check; flag</b> means Betfair is at or above the minimum price. An <b>outlined</b> flag means the moment is on but the price is below the minimum: wait, or skip it.
+      <ul>
+        <li><b>Card</b>: Ian's Trading Card for today, with <b>GO / SKIP</b> from the card's check before kick-off. A skipped trade gets no in-play flags. In play the card's own minimum prices are used: O1.5 drip at 20', 27' and 35' (0-0 only), FH goal at 25' (0-0), late goal at 70', 75' and 80' (while there's been no goal since 70'). <b>Green up: X lead</b> = a Lead &amp; Green (or featured) team has gone ahead. <b>Take your liability out</b> = the first goal came after the drip's first entry. The card's record so far counts trades that &ldquo;landed&rdquo;, not profit.</li>
+        <li><b>FTS entries</b>: FTS's trading-entry columns from the NewModel file, for every game they cover: 0-0 at 25' (FH goal), goal by 10' (2nd FH goal), 0-0 at 20' (a goal), goal after 70' and after 80'. Each chance becomes FTS's minimum price (100 &divide; chance). They're well calibrated, so they're fair prices, not an edge, and they picked games no better than the pre-match price did. So the board only flags one when Betfair beats both FTS's minimum and our own fair price. The <em>Entry</em> column shows them all.</li>
+        <li><b>HT: no more goals</b>: at half-time, in one of 28 league &times; goals-at-HT combinations where the half-time market has over-priced second-half goals, back Under (goals + 0.5). Picked on past seasons and bet on the next one, it made +5.0% on 3,705 bets in 2024&ndash;26 (with shuffled leagues: &minus;1.1%, p &asymp; 0.005). This season so far it's &minus;10.9% on 445 bets, about 1.5 standard deviations below what's expected, which is still within normal swings. The price log is still checking that FTS's half-time price can really be had, so treat it as a candidate and stake small (0.25&ndash;0.5pt). The minimum shown is the break-even price at that combination's past rate.</li>
+        <li><b>Alerts</b>: choose <em>Alerts: ticked games</em> or <em>all games</em> for a beep (and a browser notification, if you allow it) when a flag turns &check; or a green-up comes. Keep the page open. Every entry is saved, so we can check later whether they made money.</li>
+      </ul></li>
     <li>xG and xG on target are only available in leagues where SofaScore has them. Elsewhere you still get shots, shots on target and momentum.</li>
   </ul>
 </details>
 <footer id="foot">FTS &middot; in-play board &middot; live stats: SofaScore (unofficial) &middot; prices: your Betfair in-play log</footer>
 
 <script>
-window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "1.7"};
+window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "1.9"};
 (function(){
 'use strict';
 var CFG = window.__BOARD || {};
 var BOARD = null, lastApi = 0, OPEN = {}, CHECKED = 0;
 var UI = {f:'now', lg:'', sort:'ko', flagsOnly:false, selOnly:false, q:'', val:'', preset:'all', cols:null, custom:null,
-          filters:[], flogic:'and', flash:60, sortCol:'', sortDir:1};
+          filters:[], flogic:'and', flash:60, sortCol:'', sortDir:1, alert:''};
 function ls(k,v){ try{ if(v===undefined){ return localStorage.getItem(k); } localStorage.setItem(k,v); }catch(e){ return null; } }
 try{ var s0 = JSON.parse(ls('ipb.ui')||'{}'); for(var k0 in s0){ if(k0 in UI) UI[k0]=s0[k0]; } }catch(e){}
 var th0 = ls('ipb.theme'); if(th0==='light') document.documentElement.setAttribute('data-theme','light');
@@ -349,7 +380,7 @@ function load(){
   } else { p = Promise.resolve(null); }
   // GitHub's cache can hand back a copy a minute or two older than the one already showing: never go backwards
   return p.then(function(b){
-    if(b && b.games){ CHECKED = nowS(); if(!BOARD || b.generated >= BOARD.generated) BOARD = b; }
+    if(b && b.games){ CHECKED = nowS(); if(!BOARD || b.generated >= BOARD.generated){ BOARD = b; checkAlerts(); } }
     render();
   });
 }
@@ -394,6 +425,7 @@ function goalTimes(g, side){
 function flags(g){
   var out = [];
   if(!isLive(g)) return out;
+  out = out.concat(tradeFlags(g));                // v1.9: trading entries first (see 'Trading' in the help)
   if(g.vs && g.vs.ian) out.push(['val','★ Goals value']);
   var m = g.min || (g.st==='ht' ? 45 : 0), sc = g.sc || [0,0];
   if(g.fav && m >= 15){
@@ -419,10 +451,11 @@ function flags(g){
   if(g.cd && g.cd.brew) out.push(['crd','Cards brewing']);
   return out;
 }
-var CX_FLAG = 0.75;
+var CX_FLAG = 0.75, CX_FLAG_R = 1.35;   // v1.8: flag on 1.35x a normal side at that stage of the game (board 2.2 sends cx.r)
 function shortName(n){ n = String(n||''); return n.length > 13 ? n.slice(0,12)+'…' : n; }
 function cornerSide(g){
   if(!g.cx || g.st!=='live' || !g.cx.n) return null;
+  if(g.cx.r){ var rh = g.cx.r[0], ra = g.cx.r[1]; if(Math.max(rh, ra) < CX_FLAG_R) return null; return rh >= ra ? 'h' : 'a'; }
   var h = g.cx.n[0], a = g.cx.n[1];
   if(Math.max(h, a) < CX_FLAG) return null;
   return h >= a ? 'h' : 'a';
@@ -432,6 +465,98 @@ function refKind(g){
   return r.r >= 1.10 ? 'strict' : r.r <= 0.90 ? 'lenient' : null;
 }
 function refSurname(n){ var p = String(n||'').trim().split(/\s+/); return p.length > 1 ? p[0].charAt(0)+'. '+p.slice(1).join(' ') : (p[0]||''); }
+
+// ---------------------------------------------------------------- trading entries (board 2.3 sends g.ts, g.ct, g.te)
+var CARDN = {LGH:'L&G home', LGA:'L&G away', O15:'O1.5 drip', FHG:'FH goal', LATE:'Late goal drip', FEAT:'Featured'};
+var TEN = [['fh25',"0-0 at 25' &rarr; FH goal"],['fh10',"goal by 10' &rarr; 2nd FH goal"],['g20',"0-0 at 20' &rarr; a goal"],
+           ['g70',"goal after 70'"],['g80',"goal after 80'"],['hsf','home scores first']];
+function mkLab(e){
+  if(e.mk==='MO') return e.sd==='h' ? 'Home' : e.sd==='a' ? 'Away' : 'Match odds';
+  var m = /^(OU|FH)(\d)5$/.exec(e.mk||''); if(!m) return e.mk||'';
+  return (m[1]==='FH'?'FH ':'')+(e.sd==='u'?'Under ':'Over ')+m[2]+'.5';
+}
+function tsShow(e){ return !!(e.act || e.src!=='fts' || (e.go && e.fo)); }   // FTS's own entries: only when Betfair beats FTS's minimum AND our fair price
+function tsName(e){ return e.src==='fts' ? 'FTS: '+e.nm : e.nm; }
+function tsTip(e){
+  if(e.act) return e.nm;
+  var t = tsName(e)+': back '+mkLab(e);
+  if(e.b) t += '\nBetfair '+pr(e.b)+(e.old ? ' (old, or taken at another score: not used)' : '');
+  else t += '\nNo Betfair price logged for this market right now';
+  if(e.mn) t += '\n'+(e.src==='card' ? "The card's minimum " : e.src==='fts' ? 'FTS minimum (100 / '+e.pc+'%) ' : "Break-even at this cell's past rate ")+pr(e.mn);
+  if(e.f) t += '\nOur fair price '+pr(e.f);
+  if(e.v!=null) t += '\nBetfair '+(e.v>=0?'+':'')+e.v+'% against the minimum';
+  if(e.src==='fts') t += '\nFTS entries are fair prices (calibrated), not a tested edge: flagged only when Betfair beats both prices';
+  if(e.x) t += '\nThis league with this many goals at HT: no 2nd-half goal '+e.x.act+'% vs '+e.x.imp+'% priced ('+e.x.n+' games). Candidate system, still being price-checked: stake small';
+  return t;
+}
+function tradeFlags(g){
+  var out = [];
+  (g.ts||[]).forEach(function(e){
+    if(!tsShow(e)) return;
+    if(e.act) out.push(['act', e.nm, tsTip(e)]);
+    else if(e.go) out.push(['trd', tsName(e)+' ✓', tsTip(e)]);
+    else out.push(['trdw', tsName(e)+(e.old ? ' · old price' : e.b ? ' · below min' : ' · no price'), tsTip(e)]);
+  });
+  return out;
+}
+function tsBestV(g){ var b = null; (g.ts||[]).forEach(function(e){ if(e.v!=null && (b==null || e.v > b)) b = e.v; }); return b; }
+function tsGo(g){ return (g.ts||[]).some(function(e){ return !e.act && e.go && tsShow(e); }); }
+function pkChip(c){ return c.pk ? '<span class="pk '+(c.pk==='GO'?'go':'skip')+'" title="The Trading Card\'s check before kick-off">'+(c.pk==='GO'?'pre-KO GO':'pre-KO SKIP')+'</span>' : ''; }
+function cardCell(g){
+  if(!g.ct || !g.ct.length) return '<span class="muted">&ndash;</span>';
+  return g.ct.map(function(c){
+    var nm = CARDN[c.s] || c.nm;
+    var sub = c.s==='FEAT' ? esc(String(c.nm||'').replace(/^Featured:\s*/,''))+(c.pr ? ' @ '+pr(c.pr) : '')
+            : c.bk ? 'back '+esc(c.bk) : (c.mins||[]).map(function(x){ return x[0]+"' "+pr(x[1]); }).join(' &middot; ');
+    var tip = (c.nm||'')+(c.pre ? '\n'+c.pre : '')+(c.lp!=null ? '\nLanded in similar games: '+c.lp+'%' : '')+(c.stk ? '\nStake: '+c.stk : '')+
+              (c.pk ? '\nCheck before kick-off: '+c.pk : '');
+    return '<div class="ent" title="'+esc(tip)+'"><span class="en">'+esc(nm)+'</span>'+pkChip(c)+'<div class="sm num">'+sub+'</div></div>';
+  }).join('');
+}
+function entryCell(g){
+  var ts = g.ts || [];
+  if(!ts.length) return '<span class="muted">&ndash;</span>';
+  return ts.map(function(e){
+    if(e.act) return '<div class="ent act" title="'+esc(tsTip(e))+'"><span class="en">'+esc(e.nm)+'</span></div>';
+    var v = e.v!=null ? ' <span style="'+sqBg(e.v)+';border-radius:3px;padding:0 3px">'+(e.v>0?'+':'')+e.v+'%</span>' : '';
+    return '<div class="ent'+(e.go && tsShow(e) ? ' go' : '')+'" title="'+esc(tsTip(e))+'"><span class="en">'+esc(tsName(e))+'</span>'+
+      '<div class="sm num">'+esc(mkLab(e))+': BF '+(e.b ? (e.old ? '<s>'+pr(e.b)+'</s>' : pr(e.b)) : '&ndash;')+' &middot; min '+pr(e.mn)+v+'</div>'+
+      (e.f ? '<div class="sm num">our fair '+pr(e.f)+'</div>' : '')+'</div>';
+  }).join('');
+}
+// alerts: a beep (+ a browser notification if allowed) when a flag turns ✓ or an action comes up
+var ALERTED = null, ACTX = null, NEWN = 0;
+function beep(){
+  try{
+    ACTX = ACTX || new (window.AudioContext || window.webkitAudioContext)();
+    if(ACTX.state === 'suspended') ACTX.resume();
+    [0, 0.22].forEach(function(dt){
+      var o = ACTX.createOscillator(), gn = ACTX.createGain(), t = ACTX.currentTime + dt;
+      o.type = 'sine'; o.frequency.value = 880;
+      gn.gain.setValueAtTime(0.0001, t); gn.gain.exponentialRampToValueAtTime(0.25, t + 0.02); gn.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+      o.connect(gn); gn.connect(ACTX.destination); o.start(t); o.stop(t + 0.2);
+    });
+  }catch(e){}
+}
+function alertKey(g, e){ return g.k+'|'+e.id+'|'+(e.cp||'')+(e.id==='grn' && g.sc ? '|'+g.sc.join('-') : ''); }
+function checkAlerts(){
+  var gs = (BOARD && BOARD.games) || [], cur = {}, fresh = [];
+  gs.forEach(function(g){
+    (g.ts||[]).forEach(function(e){
+      if(!(e.act || (e.go && tsShow(e)))) return;
+      var k = alertKey(g, e); cur[k] = 1;
+      if(ALERTED && !ALERTED[k] && UI.alert && (UI.alert==='all' || SEL[g.k])) fresh.push(g.h+' v '+g.a+': '+tsName(e)+(e.b ? ' @ '+pr(e.b) : ''));
+    });
+  });
+  if(ALERTED === null){ ALERTED = cur; return; }                  // first load: what's already showing isn't new
+  for(var k in cur) ALERTED[k] = 1;
+  if(!fresh.length) return;
+  beep();
+  NEWN += fresh.length; document.title = '('+NEWN+') In-Play Board';
+  var n = $('alertMsg'); n.textContent = '🔔 ' + fresh.join(' · '); n.hidden = false;
+  clearTimeout(n._t); n._t = setTimeout(function(){ n.hidden = true; }, 180000);
+  try{ if(window.Notification && Notification.permission === 'granted') new Notification('In-play board', {body: fresh.join('\n')}); }catch(e){}
+}
 
 // ---------------------------------------------------------------- momentum chart
 // ---------------------------------------------------------------- chart events (goals, cards, corners)
@@ -609,7 +734,7 @@ function o25Cell(g){
 }
 function flagsCell(fl){
   if(!fl.length) return '';
-  return '<div class="flags">'+fl.map(function(f){ return '<span class="fl '+f[0]+'">'+esc(f[1])+'</span>'; }).join('')+'</div>';
+  return '<div class="flags">'+fl.map(function(f){ return '<span class="fl '+f[0]+'"'+(f[2] ? ' title="'+esc(f[2])+'"' : '')+'>'+esc(f[1])+'</span>'; }).join('')+'</div>';
 }
 function teamName(g, side){
   var n = side==='h' ? g.h : g.a;
@@ -618,9 +743,9 @@ function teamName(g, side){
 function selBox(g){ return '<input type="checkbox" class="selbox" data-sel="'+esc(g.k)+'"'+(SEL[g.k]?' checked':'')+' aria-label="Tick this game">'; }
 function cxTip(g){
   var c = g.cx; if(!c) return '';
-  var t = 'Corners expected in the next 10 min: '+g.h+' '+c.n[0].toFixed(2)+', '+g.a+' '+c.n[1].toFixed(2)+' (a normal side: 0.55)';
+  var t = 'Corners expected in the next 10 min: '+g.h+' '+c.n[0].toFixed(2)+', '+g.a+' '+c.n[1].toFixed(2)+' (a normal side at this stage: '+(c.nb!=null ? c.nb.toFixed(2) : '0.55')+')';
   t += '\nLast '+c.w+' min: corners '+c.c10[0]+'-'+c.c10[1]+', '+g.h+' had '+Math.round(c.ps*100)+'% of the ball'+(c.bs!=null ? ' and '+Math.round(c.bs*100)+'% of the box touches' : '');
-  t += '\nFlag at 0.75+: on 1,551 test games those sides won 1.5x the normal corners (at least one in the next 10 min: 54% vs 39%)';
+  t += '\nFlag at 1.35x a normal side or more (about 8% of sides at any stage): on 1,551 test games those sides won about 1.5x the normal corners';
   return t;
 }
 function cornerCell(g){
@@ -674,8 +799,10 @@ var COLS = [
   {id:'mom', lab:'Momentum', name:'Momentum', grp:'live', cls:'mom', cell:function(g){ return momSvg(g.mom, 120, 40, {ev: chartEvents(g), g: g, lane: 6}); }, sv:mom10},
   {id:'shh', lab:'Shots H', name:'Home shots', grp:'live', cell:function(g){ return pairCell(g,'sh','sot',0); }, sv:function(g){ return g.sh ? g.sh[0] : null; }},
   {id:'sha', lab:'Shots A', name:'Away shots', grp:'live', cell:function(g){ return pairCell(g,'sh','sot',1); }, sv:function(g){ return g.sh ? g.sh[1] : null; }},
-  {id:'cor', lab:'Corners', name:'Corners (+ expected next 10 min)', grp:'cc', title:'Corners so far; underneath, the corners each side is expected to win in the next 10 minutes (normal 0.55)', cell:cornerCell, sv:function(g){ return g.cx ? Math.max(g.cx.n[0], g.cx.n[1]) : null; }},
+  {id:'cor', lab:'Corners', name:'Corners (+ expected next 10 min)', grp:'cc', title:'Corners so far; underneath, the corners each side is expected to win in the next 10 minutes (a normal side: about 0.5-0.65)', cell:cornerCell, sv:function(g){ return g.cx ? Math.max(g.cx.n[0], g.cx.n[1]) : null; }},
   {id:'crd', lab:'Cards', name:'Cards + fouls', grp:'cc', title:'Yellow (and red) cards; underneath, fouls and how that compares with what is normal by now in this league', cell:cardsCell, sv:function(g){ return g.yc ? g.yc[0]+g.yc[1] : null; }},
+  {id:'card', lab:'Card', name:'Trading Card trade (+ pre-KO check)', grp:'tr', cls:'l', title:"Ian's Trading Card for today: the strategy, and GO / SKIP from the card's check before kick-off", cell:cardCell, sv:function(g){ return g.ct && g.ct.length ? 1 : 0; }},
+  {id:'entry', lab:'Entry', name:'Trading entry now (Betfair vs minimum)', grp:'tr', cls:'l', title:'An entry whose moment is on now: Betfair against the minimum price (the card\'s, FTS\'s, or the half-time system\'s break-even), and our fair price', cell:entryCell, sv:tsBestV},
   {id:'ref', lab:'Referee', name:'Referee (yellows a game)', grp:'cc', title:'The referee\'s yellow cards a game (career), against the other referees seen in this league', cell:refCell, sv:function(g){ return g.ref ? (g.ref.r!=null ? g.ref.r : g.ref.ypg/4.2) : null; }},
   {id:'h', lab:'Home', name:'Home (win)', grp:'mo', cell:function(g){ return priceCell(g,'h'); }, sv:function(g){ return sqV(g,'h'); }},
   {id:'d', lab:'Draw', name:'Draw (lay)', grp:'mo', cell:function(g){ return priceCell(g,'d'); }, sv:function(g){ return sqV(g,'d'); }},
@@ -684,12 +811,13 @@ var COLS = [
 ['OU05','OU15','OU25','OU35','OU45'].forEach(function(k){ COLS.push({id:k, lab:lineLab(k).replace('O','O'), name:'Over '+k[2]+'.5', grp:'goals', cell:function(g){ return lineCell(g,k); }, sv:function(g){ return sqV(g,k); }}); });
 ['FH05','FH15'].forEach(function(k){ COLS.push({id:k, lab:'FH '+lineLab(k).slice(3), name:'First half over '+k[2]+'.5', grp:'fh', cell:function(g){ return lineCell(g,k); }, sv:function(g){ return sqV(g,k); }}); });
 var COLBY = {}; COLS.forEach(function(c){ COLBY[c.id] = c; });
-var GRP = {match:'Match', model:'FTS / prices', live:'Live stats', cc:'Corners & cards', mo:'Match odds squares', goals:'Goals squares', fh:'First-half squares'};
+var GRP = {match:'Match', model:'FTS / prices', live:'Live stats', cc:'Corners & cards', tr:'Trading', mo:'Match odds squares', goals:'Goals squares', fh:'First-half squares'};
 var BASE = ['sel','min','home','score','away','flags','pxg','xgh','xga','mom','shh','sha'];
 var PRESETS = {
   goals: BASE.concat(['OU05','OU15','OU25','OU35','OU45','FH05','FH15']),
   mo: BASE.concat(['h','d','a','o25mv']),
   cc: BASE.concat(['cor','crd','ref']),
+  tr: BASE.concat(['card','entry','OU05','OU15','OU25','FH05','FH15']),
   all: COLS.map(function(c){ return c.id; }).filter(function(id){ return id!=='ko' && id!=='lg'; })
 };
 function sqV(g, k){ var e = sqOf(g, k); return e && e.v!=null ? e.v : null; }
@@ -720,6 +848,7 @@ var FIELDS = [
   {id:'coa', lab:'Away corners', t:'num', get:function(g){ return g.co ? g.co[1] : null; }},
   {id:'cxm', lab:'Corners expected next 10 min (busier side)', t:'num', get:function(g){ return g.cx ? Math.max(g.cx.n[0], g.cx.n[1]) : null; }},
   {id:'cxt', lab:'Corners expected next 10 min (both sides)', t:'num', get:function(g){ return g.cx ? +(g.cx.n[0] + g.cx.n[1]).toFixed(2) : null; }},
+  {id:'cxr', lab:'Corners next 10 vs a normal side (x, busier side)', t:'num', get:function(g){ return g.cx && g.cx.r ? Math.max(g.cx.r[0], g.cx.r[1]) : null; }},
   {id:'yc', lab:'Yellow cards (total)', t:'num', get:function(g){ return g.yc ? g.yc[0]+g.yc[1] : null; }},
   {id:'fo', lab:'Fouls (total)', t:'num', get:function(g){ return g.fo ? g.fo[0]+g.fo[1] : null; }},
   {id:'fr', lab:'Fouls vs league norm (x)', t:'num', get:function(g){ return g.cd ? g.cd.fr : null; }},
@@ -730,6 +859,12 @@ var FIELDS = [
   {id:'fstrict', lab:'Strict ref', t:'bool', get:function(g){ return refKind(g)==='strict'; }},
   {id:'flen', lab:'Lenient ref', t:'bool', get:function(g){ return refKind(g)==='lenient'; }},
   {id:'fbrew', lab:'Cards brewing', t:'bool', get:function(g){ return !!(g.cd && g.cd.brew); }},
+  {id:'tsany', lab:'Trading entry open now', t:'bool', get:function(g){ return !!(g.ts && g.ts.some(function(e){ return !e.act; })); }},
+  {id:'tsgo', lab:'Trading entry at or above its minimum (flagged ✓)', t:'bool', get:tsGo},
+  {id:'tsact', lab:'Green up / take liability out now', t:'bool', get:function(g){ return !!(g.ts && g.ts.some(function(e){ return e.act; })); }},
+  {id:'tsv', lab:'Trading entry: Betfair vs minimum %', t:'num', get:tsBestV},
+  {id:'tcard', lab:'On the Trading Card', t:'bool', get:function(g){ return !!(g.ct && g.ct.length); }},
+  {id:'tht', lab:'HT no-more-goals game (at half-time)', t:'bool', get:function(g){ return !!(g.ts && g.ts.some(function(e){ return e.id==='htu'; })); }},
   {id:'best', lab:'Best value % (any square)', t:'num', get:bestVal},
   {id:'o25mv', lab:'O2.5 move 7am to off', t:'num', get:o25Move},
   {id:'sel', lab:'Ticked', t:'bool', get:function(g){ return !!SEL[g.k]; }},
@@ -820,7 +955,13 @@ function detail(g){
   if(g.off) kv.push(['At the off H/D/A', [g.off.h,g.off.d,g.off.a].map(pr).join(' / ')]);
   if(g.p7 && g.p7.o25) kv.push(['Over 2.5', '7am '+pr(g.p7.o25)+(g.o25o ? ' &rarr; '+(isLive(g)||isFin(g)?'off ':'latest ')+pr(g.o25o) : '')]);
   if(g.px) kv.push(['Now H/D/A', [g.px.h,g.px.d,g.px.a].map(pr).join(' / ') + (g.px.age!=null ? ' <span class="muted">('+Math.round(g.px.age/60)+' min old)</span>' : '')]);
-  if(g.card) kv.push(['On the Trading Card', esc(g.card)]);
+  if(g.ct && g.ct.length) g.ct.forEach(function(c){
+    kv.push(['Trading Card', esc(c.nm)+pkChip(c)+(c.mins && c.mins.length ? ' &middot; minimum '+c.mins.map(function(x){ return x[0]+"' "+pr(x[1]); }).join(', ') : '')+
+             (c.bk ? ' &middot; back '+esc(c.bk) : '')+(c.pr ? ' @ '+pr(c.pr) : '')+(c.lp!=null ? ' <span class="muted">(landed '+c.lp+'% in similar games)</span>' : '')]);
+  });
+  else if(g.card) kv.push(['On the Trading Card', esc(g.card)]);
+  if(g.te) kv.push(['FTS trading entries', TEN.filter(function(p){ return g.te[p[0]]!=null; }).map(function(p){ return p[1]+' '+(+g.te[p[0]]).toFixed(1)+'% <span class="muted">(min '+pr(100/g.te[p[0]])+')</span>'; }).join('<br>')]);
+  (g.ts||[]).forEach(function(e){ kv.push([e.act ? 'Now' : 'Entry now', esc(tsTip(e)).replace(/\n/g, '<br>')]); });
   var vt = '';
   if(g.vs && g.vs.sq){
     var src = {off:'Betfair prices at the off', '7am':'the 7am Betfair prices', xg:'NewModel xG (no prices found)'}[g.vs.src] || g.vs.src;
@@ -972,6 +1113,8 @@ function render(){
       (g.mom ? '<div class="c4">'+momSvg(g.mom, Math.min(560, (window.innerWidth||360) - 58), 40, {ev: chartEvents(g), g: g, lane: 6})+'</div>' : '')+
       (sqRow || (pxs ? '<div class="c5"><span>'+pxLab+' <b class="num">'+pxs+'</b></span></div>' : ''))+
       (fl.length ? '<div class="c5">'+flagsCell(fl)+'</div>' : '')+
+      (g.ct && g.ct.length ? '<div class="c5">'+cardCell(g)+'</div>' : '')+
+      ((g.ts||[]).some(function(e){ return !e.act; }) ? '<div class="c5">'+entryCell(g)+'</div>' : '')+
       (open ? '<div class="det">'+detail(g)+'</div>' : '')+'</div>');
   });
   $('tb').innerHTML = tb.join('');
@@ -984,6 +1127,7 @@ function render(){
   document.querySelectorAll('#presets button').forEach(function(x){ x.classList.toggle('on', x.getAttribute('data-p')===UI.preset); });
   $('sort').value = UI.sort; $('flagsOnly').checked = !!UI.flagsOnly; $('selOnly').checked = !!UI.selOnly; $('val').value = UI.val || '';
   $('flash').value = String(UI.flash);
+  $('alert').value = UI.alert || '';
   var nf = (UI.filters||[]).filter(filterOk).length; $('fcount').hidden = !nf; $('fcount').textContent = nf;
   if($('q').value !== UI.q) $('q').value = UI.q;
   scheduleFlashEnd();
@@ -1066,6 +1210,15 @@ $('flagsOnly').addEventListener('change', function(){ UI.flagsOnly = this.checke
 $('selOnly').addEventListener('change', function(){ UI.selOnly = this.checked; saveUI(); render(); });
 $('val').addEventListener('change', function(){ UI.val = this.value; saveUI(); render(); });
 $('flash').addEventListener('change', function(){ UI.flash = +this.value; saveUI(); render(); });
+$('alert').addEventListener('change', function(){
+  UI.alert = this.value; saveUI();
+  if(UI.alert){
+    try{ ACTX = ACTX || new (window.AudioContext || window.webkitAudioContext)(); ACTX.resume(); }catch(e){}   // sound needs a click to start
+    try{ if(window.Notification && Notification.permission === 'default') Notification.requestPermission(); }catch(e){}
+  }
+});
+window.addEventListener('focus', function(){ if(NEWN){ NEWN = 0; document.title = 'In-Play Board'; } });
+$('alertMsg').addEventListener('click', function(){ this.hidden = true; NEWN = 0; document.title = 'In-Play Board'; });
 $('q').addEventListener('input', function(){ UI.q = this.value; saveUI(); render(); });
 $('thr').addEventListener('click', function(e){
   if(e.target.id === 'selAll'){
