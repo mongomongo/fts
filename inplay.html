@@ -276,7 +276,7 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
       <button data-s="" title="Show games as usual">Off</button>
       <button data-s="any" title="Only games where one of the four setups lines up right now">Any setup</button>
       <button data-s="goal" title="Next goal lines green (one 5%+ at 1.7+), 20-35' or 55-75'">Goal coming</button>
-      <button data-s="dead" title="Under the next goal line 10%+ value against our fair price, from 30' or at half-time">Going dead</button>
+      <button data-s="dead" title="From 30' or at half-time: Under the next goal line 5%+ value against our fair price, after allowing for our model's usual lean to Unders">Going dead</button>
       <button data-s="cor" title="One side expected to win 1.35x+ the normal corners in the next 10 minutes">Corners</button>
       <button data-s="crd" title="Cards brewing (fouls 1.25x the league norm from 55', 0-1 goal in it), referee not lenient">Cards</button>
     </div>
@@ -326,7 +326,7 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
     <li><b>How our fair price is made</b>: each side's expected goals are fitted to the Betfair prices at the off (else the 7am prices, else NewModel xG). Then every remaining minute is played out with how goals really arrive (more after half-time, lots in added time) and how the score changes things (the side behind late scores more). Red cards and live xG adjust it. Fitted and checked on FTS's results file: 47,924 games since 2021.</li>
     <li><b>How much to trust it</b>: on 10,433 games from this season (not used to fit it), Betfair's half-time prices were slightly more accurate than ours, and backing every green goal square at half-time made no reliable profit. So a few % of value is mostly noise. Every reading is saved so we can test it on our own games.</li>
     <li><b>O2.5 move</b>: Over 2.5 at 7am &rarr; the last price before kick-off (green = shortened). Ian picks games where it has come in.</li>
-    <li><b>Setups</b> (the <em>Setups</em> bar): the four moments worth acting on, each one a price and the game agreeing. Pick one to see only those games (the bar shows how many there are now, and switches to the columns it's about); its blue <b>&#9733; chip</b> in <em>Flags</em> says what to back and why. <b>Goal coming</b> = 20&ndash;35' or 55&ndash;75', both of the next two goal lines green and one 5%+ at 1.7 or bigger (Ian's rule, within the minutes where it makes sense). <b>Going dead</b> = from 30' or at half-time, Betfair's <em>Under</em> on the next goal line is 10%+ bigger than our fair price (10%, not 5%, because our model leans to Unders against Betfair already). <b>Corners: team</b> = the corners flag below. <b>Cards</b> = cards brewing and the referee isn't lenient (&ldquo;+ strict ref&rdquo; when they're strict). The goal setups are price-only on purpose: tested on 1,550 games played minute by minute (18 Oct), the goals flags added nothing beyond our fair price, so they don't decide anything. A setup is a reason to look, not an order: stake small until the saved readings show which make money. <em>Alerts: setups</em> beeps when one lines up (again after each goal).</li>
+    <li><b>Setups</b> (the <em>Setups</em> bar): the four moments worth acting on, each one a price and the game agreeing. Pick one to see only those games (the bar shows how many there are now, and switches to the columns it's about); its blue <b>&#9733; chip</b> in <em>Flags</em> says what to back and why. <b>Goal coming</b> = 20&ndash;35' or 55&ndash;75', both of the next two goal lines green and one 5%+ at 1.7 or bigger (Ian's rule, within the minutes where it makes sense). <b>Going dead</b> = from 30' or at half-time, Betfair's <em>Under</em> on the next goal line is 5%+ bigger than our fair Under, <em>after</em> allowing for our model's usual lean. Our model rates more goals a little lower than Betfair does (0.12&ndash;0.27 on the log-odds scale in 2,393 live readings), and on a long Under like 0-0 at 30' that lean alone looks like 10&ndash;16% value. So the board first moves our goal chance 0.2 towards Betfair, then asks for 5% on top. <b>Corners: team</b> = the corners flag below. <b>Cards</b> = cards brewing and the referee isn't lenient (&ldquo;+ strict ref&rdquo; when they're strict). The goal setups are price-only on purpose: tested on 1,550 games played minute by minute (18 Oct), the goals flags added nothing beyond our fair price, so they don't decide anything. A setup is a reason to look, not an order: stake small until the saved readings show which make money. <em>Alerts: setups</em> beeps when one lines up (again after each goal).</li>
     <li><b>Flags</b>: the goals ones (Fav behind, xG &gt; goals, Quiet) are context only. On 1,550 games played minute by minute (StatsBomb 2015/16, with the market's pre-match prices) the goals came at the rate our fair price already gave: xG &gt; goals 69.6% another goal vs 68.4% expected, Quiet 83.8% vs 83.5%, and a favourite behind but on top won <em>less</em> often than expected (12.8% vs 16.2%). The corners and cards ones are tested and do say something: see below. <b>&#9733; Goals value</b> = both of the next two goal squares green, one 5%+ at 1.7 or bigger (Ian's rule). <b>Fav behind, on top</b> = the favourite is losing after 15' but leads xG by 0.4+ (or shots by 4+) and isn't behind on shots on target. <b>xG &gt; goals</b> = after 20', total xG at least 0.9 more than the goals. <b>Quiet</b> = after 30', total xG under 0.35 and at most one shot on target.</li>
     <li><b>Corners</b>: corners so far, and underneath the corners each side is expected to win in the <b>next 10 minutes</b> (a normal side: about 0.5 in the first half, 0.55 in the second, 0.63 just before half-time). It comes from what drove corners in 1,551 games with every event logged (StatsBomb's free data: 2015/16 Premier League, La Liga, Serie A, Ligue 1): who has had the ball and the box touches over the last 10 minutes, the side's corner rate so far, and the score (the side behind wins about 11% more, the side ahead about 17% fewer). xG and shots added nothing once possession and box touches were known. <b>Corners: team</b> flag = that side is expected to win at least 1.35&times; what a normal side would at that stage of the game (about 0.7 corners in the first half, 0.75 in the second, 0.85 just before half-time, when added time makes corners come thicker). That's about 1 side in 12 at any stage. In leagues the model wasn't fitted on, those sides won 1.41&ndash;1.50&times; the normal corners for that stage, and at least one in the next 10 minutes 50&ndash;53% of the time against 39&ndash;40%. Pressure moves corners to the side pressing; the <em>match total</em> barely changes (1.1&ndash;1.2&times;), so it says more about who wins the next corner than about total corner lines.</li>
     <li><b>Cards</b>: yellow (red) cards, and underneath the fouls with &times; = fouls so far against what's normal by now in this league. In the same games, fouls were the only live sign of cards to come: a game 25%+ over the league's fouls with one goal or less in it went on to 1.16&times; the normal yellows from 60' and 1.38&times; from 70'. Cards already shown said <em>nothing</em> about cards still to come, and a 2-goal gap cut them by about 18%. <b>Cards brewing</b> flag = from 55', fouls 1.25&times; the league norm or more, goal gap 0 or 1. League norms start from football-data.co.uk 2025/26 for the big five and are learned from the board's own finished games for every other league (5 games before the flag is used).</li>
@@ -345,7 +345,7 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
 <footer id="foot">FTS &middot; in-play board &middot; live stats: SofaScore (unofficial) &middot; prices: your Betfair in-play log</footer>
 
 <script>
-window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "2.2.0", "cf": "https://fts-board.memongomemongo.workers.dev/board"};
+window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "2.2.1", "cf": "https://fts-board.memongomemongo.workers.dev/board"};
 (function(){
 'use strict';
 var CFG = window.__BOARD || {};
@@ -470,6 +470,16 @@ function goalTimes(g, side){
 // Built on what testing backed (18 Oct): the goals flags (Fav behind / xG > goals / Quiet) added nothing beyond our
 // fair price on 1,550 games, so the goal setups are price-only; the corners and cards flags did predict more.
 var SETUPS = {goal:'Goal coming', dead:'Going dead', cor:'Corners', crd:'Cards'};
+// Our chance of more goals runs below Betfair's by 0.12-0.27 on the log-odds scale (2,393 live readings, 17 Oct), which
+// alone makes a long Under look 10-16% 'value'. So the Under is judged after moving our goal chance that usual amount
+// towards Betfair (UNDER_LEAN, the middle of that range), and needs DEAD_MIN % on top.
+var UNDER_LEAN = 0.2, DEAD_MIN = 5;
+function underEdge(sq){                            // -> [value % after the lean, our fair Under after the lean] or null
+  if(!sq || !sq.ub || sq.p == null) return null;
+  var p = Math.min(Math.max(sq.p/100, 0.001), 0.999), l = Math.log(p/(1-p)) + UNDER_LEAN;
+  var pa = 1/(1+Math.exp(-l)), fa = 1/(1-pa);
+  return [Math.round((sq.ub - fa)/sq.ub*1000)/10, fa];
+}
 function setups(g){
   var out = [];
   if(!isLive(g)) return out;
@@ -480,10 +490,12 @@ function setups(g){
     out.push(['goal', SETUPS.goal, 'Back '+lineLab(b.ln)+': Betfair '+pr(b.b)+' vs our fair '+pr(b.f)+' (+'+b.v+'%); both next goal lines green. '+
               'Our model leans to Unders, so an Over green is a real disagreement with the market.']);
   }
-  if((g.st==='ht' || m >= 30) && (n1.uv||0) >= 10 && n1.ub){
+  var ue = (g.st==='ht' || m >= 30) && n1.uv != null ? underEdge(n1) : null;
+  if(ue && ue[0] >= DEAD_MIN){
     var htc = (g.ts||[]).some(function(e){ return e.src==='ht' && e.go && tsShow(e); });
-    out.push(['dead', SETUPS.dead, 'Back Under '+(gl+0.5)+': Betfair '+pr(n1.ub)+' vs our fair '+pr(1/(1-(n1.p||0)/100))+' (+'+n1.uv+'%)'+
-              (htc ? '. HT: no more goals cell is on too.' : '.')+' Needs 10%+ because our model leans to Unders.']);
+    out.push(['dead', SETUPS.dead, 'Back Under '+(gl+0.5)+': Betfair '+pr(n1.ub)+' vs our fair '+pr(1/(1-(n1.p||0)/100))+' (+'+n1.uv+'%), '+
+              'or '+pr(ue[1])+' (+'+ue[0]+'%) after allowing for our model\'s usual lean to Unders'+
+              (htc ? '. HT: no more goals cell is on too.' : '.')]);
   }
   var cs = cornerSide(g);
   if(cs) out.push(['cor', SETUPS.cor+': '+shortName(cs==='h' ? g.h : g.a), 'Expected to win 1.35x+ the normal corners in the next 10 min (tested: 1.4-1.5x, at least one 50-53% vs 39-40%). It moves who wins corners, not the total.']);
