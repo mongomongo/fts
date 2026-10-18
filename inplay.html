@@ -71,7 +71,8 @@ input[type=search]{min-width:150px}
 .frow select,.frow input{width:100%;padding:4px 6px}
 .frow .x{border:0;background:transparent;color:var(--ink3);padding:2px;font-size:16px}
 .linkbtn{border:0;background:transparent;color:var(--accent);padding:4px 2px;font-weight:600;font-size:12.5px}
-.wrap{overflow-x:auto;margin-top:8px}
+/* v2.1.2: the table scrolls inside its own box (height = the window below the sticky header), so the column headings stay in view while scrolling down, and the sideways scrollbar is always on screen */
+.wrap{overflow:auto;margin-top:8px;max-height:calc(100vh - var(--hdr, 170px) - 12px)}
 table.grid{border-collapse:separate;border-spacing:0;width:max-content;min-width:100%}
 .grid th{font-size:11px;font-weight:600;color:var(--ink3);text-align:center;padding:8px 6px;border-bottom:1px solid var(--line);white-space:nowrap;position:sticky;top:0;background:var(--bg);z-index:3;cursor:pointer;user-select:none}
 .grid th.l,.grid td.l{text-align:left}
@@ -326,7 +327,7 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
 <footer id="foot">FTS &middot; in-play board &middot; live stats: SofaScore (unofficial) &middot; prices: your Betfair in-play log</footer>
 
 <script>
-window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "2.1.1", "cf": "https://fts-board.memongomemongo.workers.dev/board"};
+window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "2.1.2", "cf": "https://fts-board.memongomemongo.workers.dev/board"};
 (function(){
 'use strict';
 var CFG = window.__BOARD || {};
@@ -1087,7 +1088,12 @@ function cellHtml(c, g){
   if((c.id==='home' && flashing(g,'h')) || (c.id==='away' && flashing(g,'a'))) cls += ' goalnow';
   return '<td class="'+cls+'" data-col="'+c.id+'">'+c.cell(g)+'</td>';
 }
+function fitWrap(){                 // v2.1.2: keep the table box exactly the height left under the page header
+  var h = document.querySelector('header');
+  if(h) document.documentElement.style.setProperty('--hdr', h.offsetHeight + 'px');
+}
 function stickify(){
+  fitWrap();
   var row = $('thr'), ths = row.querySelectorAll('th.stk'), left = 0, lastId = null;
   var offs = {};
   ths.forEach(function(th){ offs[th.getAttribute('data-col')] = left; left += th.offsetWidth; lastId = th.getAttribute('data-col'); });
