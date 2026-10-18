@@ -123,6 +123,10 @@ td.goalnow .tn::after{content:" GOAL";font-size:10px;font-weight:800;color:var(-
 .fl.trd{background:var(--flag-trd-bg);color:var(--flag-trd)}
 .fl.trdw{background:transparent;color:var(--ink3);box-shadow:inset 0 0 0 1px var(--line2)}
 .fl.act{background:var(--flag-fav);color:var(--bg)}
+.fl.setup{background:#1f5fae;color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
+.chips .lab{padding:4px 4px 4px 8px;color:var(--ink3);font-size:12px;align-self:center}
+.chips button .n{display:inline-block;min-width:16px;margin-left:5px;padding:0 4px;border-radius:8px;background:var(--line2);color:var(--ink);font-size:11px;font-weight:700}
+.chips button.on .n{background:rgba(255,255,255,.25);color:inherit}
 .ent{white-space:nowrap;text-align:left;line-height:1.25}
 .ent+.ent{margin-top:4px}
 .ent .en{font-size:12.5px;font-weight:600}
@@ -261,8 +265,21 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
       <option value="">Alerts: off</option>
       <option value="sel">Alerts: ticked games</option>
       <option value="all">Alerts: all games</option>
+      <option value="sus">Alerts: setups, ticked games</option>
+      <option value="su">Alerts: setups, all games</option>
     </select>
     <input type="search" id="q" placeholder="Team or league" aria-label="Search">
+  </div>
+  <div class="controls">
+    <div class="chips" id="setupsBar" role="group" aria-label="Setups">
+      <span class="lab">Setups</span>
+      <button data-s="" title="Show games as usual">Off</button>
+      <button data-s="any" title="Only games where one of the four setups lines up right now">Any setup</button>
+      <button data-s="goal" title="Next goal lines green (one 5%+ at 1.7+), 20-35' or 55-75'">Goal coming</button>
+      <button data-s="dead" title="Under the next goal line 10%+ value against our fair price, from 30' or at half-time">Going dead</button>
+      <button data-s="cor" title="One side expected to win 1.35x+ the normal corners in the next 10 minutes">Corners</button>
+      <button data-s="crd" title="Cards brewing (fouls 1.25x the league norm from 55', 0-1 goal in it), referee not lenient">Cards</button>
+    </div>
   </div>
   <div class="legend"><span><span class="sw" style="background:var(--home)"></span>Home pressure</span><span><span class="sw" style="background:var(--away)"></span>Away pressure</span><span><span class="sw" style="background:rgba(var(--vpos),.6)"></span>value</span><span><span class="sw" style="background:rgba(var(--vneg),.6)"></span>no value</span><span><span class="sw" style="background:var(--goal)"></span>just scored</span><span class="muted">Squares: our fair price on top, Betfair below &middot; big = xG / shots, small = on target &middot; bold team = favourite &middot; &#9917; goal times (~ = minute estimated)</span></div>
 </header>
@@ -309,7 +326,8 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
     <li><b>How our fair price is made</b>: each side's expected goals are fitted to the Betfair prices at the off (else the 7am prices, else NewModel xG). Then every remaining minute is played out with how goals really arrive (more after half-time, lots in added time) and how the score changes things (the side behind late scores more). Red cards and live xG adjust it. Fitted and checked on FTS's results file: 47,924 games since 2021.</li>
     <li><b>How much to trust it</b>: on 10,433 games from this season (not used to fit it), Betfair's half-time prices were slightly more accurate than ours, and backing every green goal square at half-time made no reliable profit. So a few % of value is mostly noise. Every reading is saved so we can test it on our own games.</li>
     <li><b>O2.5 move</b>: Over 2.5 at 7am &rarr; the last price before kick-off (green = shortened). Ian picks games where it has come in.</li>
-    <li><b>Flags</b>: the goals ones are rules of thumb, not tested yet (the corners and cards ones are tested: see below). <b>&#9733; Goals value</b> = both of the next two goal squares green, one 5%+ at 1.7 or bigger (Ian's rule). <b>Fav behind, on top</b> = the favourite is losing after 15' but leads xG by 0.4+ (or shots by 4+) and isn't behind on shots on target. <b>xG &gt; goals</b> = after 20', total xG at least 0.9 more than the goals. <b>Quiet</b> = after 30', total xG under 0.35 and at most one shot on target.</li>
+    <li><b>Setups</b> (the <em>Setups</em> bar): the four moments worth acting on, each one a price and the game agreeing. Pick one to see only those games (the bar shows how many there are now, and switches to the columns it's about); its blue <b>&#9733; chip</b> in <em>Flags</em> says what to back and why. <b>Goal coming</b> = 20&ndash;35' or 55&ndash;75', both of the next two goal lines green and one 5%+ at 1.7 or bigger (Ian's rule, within the minutes where it makes sense). <b>Going dead</b> = from 30' or at half-time, Betfair's <em>Under</em> on the next goal line is 10%+ bigger than our fair price (10%, not 5%, because our model leans to Unders against Betfair already). <b>Corners: team</b> = the corners flag below. <b>Cards</b> = cards brewing and the referee isn't lenient (&ldquo;+ strict ref&rdquo; when they're strict). The goal setups are price-only on purpose: tested on 1,550 games played minute by minute (18 Oct), the goals flags added nothing beyond our fair price, so they don't decide anything. A setup is a reason to look, not an order: stake small until the saved readings show which make money. <em>Alerts: setups</em> beeps when one lines up (again after each goal).</li>
+    <li><b>Flags</b>: the goals ones (Fav behind, xG &gt; goals, Quiet) are context only. On 1,550 games played minute by minute (StatsBomb 2015/16, with the market's pre-match prices) the goals came at the rate our fair price already gave: xG &gt; goals 69.6% another goal vs 68.4% expected, Quiet 83.8% vs 83.5%, and a favourite behind but on top won <em>less</em> often than expected (12.8% vs 16.2%). The corners and cards ones are tested and do say something: see below. <b>&#9733; Goals value</b> = both of the next two goal squares green, one 5%+ at 1.7 or bigger (Ian's rule). <b>Fav behind, on top</b> = the favourite is losing after 15' but leads xG by 0.4+ (or shots by 4+) and isn't behind on shots on target. <b>xG &gt; goals</b> = after 20', total xG at least 0.9 more than the goals. <b>Quiet</b> = after 30', total xG under 0.35 and at most one shot on target.</li>
     <li><b>Corners</b>: corners so far, and underneath the corners each side is expected to win in the <b>next 10 minutes</b> (a normal side: about 0.5 in the first half, 0.55 in the second, 0.63 just before half-time). It comes from what drove corners in 1,551 games with every event logged (StatsBomb's free data: 2015/16 Premier League, La Liga, Serie A, Ligue 1): who has had the ball and the box touches over the last 10 minutes, the side's corner rate so far, and the score (the side behind wins about 11% more, the side ahead about 17% fewer). xG and shots added nothing once possession and box touches were known. <b>Corners: team</b> flag = that side is expected to win at least 1.35&times; what a normal side would at that stage of the game (about 0.7 corners in the first half, 0.75 in the second, 0.85 just before half-time, when added time makes corners come thicker). That's about 1 side in 12 at any stage. In leagues the model wasn't fitted on, those sides won 1.41&ndash;1.50&times; the normal corners for that stage, and at least one in the next 10 minutes 50&ndash;53% of the time against 39&ndash;40%. Pressure moves corners to the side pressing; the <em>match total</em> barely changes (1.1&ndash;1.2&times;), so it says more about who wins the next corner than about total corner lines.</li>
     <li><b>Cards</b>: yellow (red) cards, and underneath the fouls with &times; = fouls so far against what's normal by now in this league. In the same games, fouls were the only live sign of cards to come: a game 25%+ over the league's fouls with one goal or less in it went on to 1.16&times; the normal yellows from 60' and 1.38&times; from 70'. Cards already shown said <em>nothing</em> about cards still to come, and a 2-goal gap cut them by about 18%. <b>Cards brewing</b> flag = from 55', fouls 1.25&times; the league norm or more, goal gap 0 or 1. League norms start from football-data.co.uk 2025/26 for the big five and are learned from the board's own finished games for every other league (5 games before the flag is used).</li>
     <li><b>Referee</b>: the referee's yellow cards a game over their career (SofaScore), and &times; against the other referees the board has seen in that league (shrunk towards the league average, so a referee with few games doesn't stand out by luck). <b>Strict ref</b> = &times;1.10 or more, <b>Lenient ref</b> = &times;0.90 or less (needs 20+ games and 3 other referees seen in the league). Tested on Premier League games 2005&ndash;2026 using only each referee's earlier games: strict referees gave 13% more yellows (5+ yellows 30% of games vs 26%), lenient ones 20% fewer (5+ yellows 14%). Bookmakers and Betfair know who the referee is too, so this is context, not an edge on its own.</li>
@@ -319,7 +337,7 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
         <li><b>FTS entries</b>: FTS's trading-entry columns from the NewModel file, for every game they cover: 0-0 at 25' (FH goal), goal by 10' (2nd FH goal), 0-0 at 20' (a goal), goal after 70' and after 80'. Each chance becomes FTS's minimum price (100 &divide; chance). They're well calibrated, so they're fair prices, not an edge, and they picked games no better than the pre-match price did. So the board only flags one when Betfair beats both FTS's minimum and our own fair price. The <em>Entry</em> column shows them all.</li>
         <li><b>HT: no more goals</b>: at half-time, in one of 28 league &times; goals-at-HT combinations where the half-time market has over-priced second-half goals, back Under (goals + 0.5). Picked on past seasons and bet on the next one, it made +5.0% on 3,705 bets in 2024&ndash;26 (with shuffled leagues: &minus;1.1%, p &asymp; 0.005). This season so far it's &minus;10.9% on 445 bets, about 1.5 standard deviations below what's expected, which is still within normal swings. The price log is still checking that FTS's half-time price can really be had, so treat it as a candidate and stake small (0.25&ndash;0.5pt). The minimum shown is the break-even price at that combination's past rate.</li>
         <li><b>Angle</b> (league angles): moments where one league has beaten the board's own league-blind price since 2021, and kept doing so in the later seasons. Brazil 0-0 at 25' and Brazil / Poland 0-0 at 35' (first-half goal), a 1-goal lead at 70' (another goal: Bundesliga, Poland, Swiss, Ligue 1, Austria, Eredivisie, Premier League; no more goals: J-League, Championship), the Championship after 80' (no more goals), and the Bundesliga after 60' (2+ more goals). The angle's price is our chance plus that league's effect, shrunk towards zero so a small league doesn't stand out by luck. The flag shows only when Betfair is at or above it. Where we could check against real prices (at half-time), Betfair already allowed for about half of each league effect, so expect less than the history suggests. Each one is checked against the logged Betfair prices before it's trusted.</li>
-        <li><b>Alerts</b>: choose <em>Alerts: ticked games</em> or <em>all games</em> for a beep (and a browser notification, if you allow it) when a flag turns &check; or a green-up comes. Keep the page open. Every entry is saved, so we can check later whether they made money.</li>
+        <li><b>Alerts</b>: choose <em>Alerts: ticked games</em> or <em>all games</em> for a beep (and a browser notification, if you allow it) when a flag turns &check; or a green-up comes, or <em>Alerts: setups</em> to beep only when one of the four setups lines up. Keep the page open. Every entry is saved, so we can check later whether they made money.</li>
       </ul></li>
     <li>xG and xG on target are only available in leagues where SofaScore has them. Elsewhere you still get shots, shots on target and momentum.</li>
   </ul>
@@ -327,13 +345,13 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
 <footer id="foot">FTS &middot; in-play board &middot; live stats: SofaScore (unofficial) &middot; prices: your Betfair in-play log</footer>
 
 <script>
-window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "2.1.2", "cf": "https://fts-board.memongomemongo.workers.dev/board"};
+window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "2.2.0", "cf": "https://fts-board.memongomemongo.workers.dev/board"};
 (function(){
 'use strict';
 var CFG = window.__BOARD || {};
 var BOARD = null, lastApi = 0, OPEN = {}, CHECKED = 0, SRC = '', cfFails = 0, cfDownUntil = 0;
 var UI = {f:'now', lg:'', sort:'ko', flagsOnly:false, selOnly:false, q:'', val:'', preset:'all', cols:null, custom:null,
-          filters:[], flogic:'and', flash:60, sortCol:'', sortDir:1, alert:''};
+          filters:[], flogic:'and', flash:60, sortCol:'', sortDir:1, alert:'', setup:''};
 function ls(k,v){ try{ if(v===undefined){ return localStorage.getItem(k); } localStorage.setItem(k,v); }catch(e){ return null; } }
 try{ var s0 = JSON.parse(ls('ipb.ui')||'{}'); for(var k0 in s0){ if(k0 in UI) UI[k0]=s0[k0]; } }catch(e){}
 var th0 = ls('ipb.theme'); if(th0==='light') document.documentElement.setAttribute('data-theme','light');
@@ -448,12 +466,42 @@ function goalTimes(g, side){
     xs.map(function(x){ return x[0] ? (x[4]?'<i>~</i>':'')+'<b>'+esc(x[0])+'</b>'+(x[2]==='p'?'p':x[2]==='og'?'og':'') : '<b>?</b>'; }).join(' ')+'</span>';
 }
 
-// ---------------------------------------------------------------- flags (rules of thumb)
+// ---------------------------------------------------------------- setups (page 2.2): price + game agreeing
+// Built on what testing backed (18 Oct): the goals flags (Fav behind / xG > goals / Quiet) added nothing beyond our
+// fair price on 1,550 games, so the goal setups are price-only; the corners and cards flags did predict more.
+var SETUPS = {goal:'Goal coming', dead:'Going dead', cor:'Corners', crd:'Cards'};
+function setups(g){
+  var out = [];
+  if(!isLive(g)) return out;
+  var m = g.min || 0, vs = g.vs || {}, sq = vs.sq || {}, gl = vs.g || 0;
+  var n1 = sq['OU'+gl+'5'] || {}, n2 = sq['OU'+(gl+1)+'5'] || {};
+  if(g.st==='live' && ((m >= 20 && m <= 35) || (m >= 55 && m <= 75)) && vs.ian){
+    var b = [n1, n2].filter(function(x){ return (x.v||0) >= 5 && (x.b||0) >= 1.7; })[0] || n1;
+    out.push(['goal', SETUPS.goal, 'Back '+lineLab(b.ln)+': Betfair '+pr(b.b)+' vs our fair '+pr(b.f)+' (+'+b.v+'%); both next goal lines green. '+
+              'Our model leans to Unders, so an Over green is a real disagreement with the market.']);
+  }
+  if((g.st==='ht' || m >= 30) && (n1.uv||0) >= 10 && n1.ub){
+    var htc = (g.ts||[]).some(function(e){ return e.src==='ht' && e.go && tsShow(e); });
+    out.push(['dead', SETUPS.dead, 'Back Under '+(gl+0.5)+': Betfair '+pr(n1.ub)+' vs our fair '+pr(1/(1-(n1.p||0)/100))+' (+'+n1.uv+'%)'+
+              (htc ? '. HT: no more goals cell is on too.' : '.')+' Needs 10%+ because our model leans to Unders.']);
+  }
+  var cs = cornerSide(g);
+  if(cs) out.push(['cor', SETUPS.cor+': '+shortName(cs==='h' ? g.h : g.a), 'Expected to win 1.35x+ the normal corners in the next 10 min (tested: 1.4-1.5x, at least one 50-53% vs 39-40%). It moves who wins corners, not the total.']);
+  var rk = refKind(g);
+  if(g.cd && g.cd.brew && rk !== 'lenient') out.push(['crd', SETUPS.crd+(rk==='strict' ? ' + strict ref' : ''),
+    'Fouls 1.25x+ the league norm from 55\', 0-1 goal in it (tested: 1.16x yellows from 60\', 1.38x from 70\')'+(rk==='strict' ? '; strict referee, about 13% more' : '')+'.']);
+  return out;
+}
+function hasSetup(g, id){ var su = setups(g); return id==='any' ? su.length > 0 : su.some(function(x){ return x[0]===id; }); }
+
+// ---------------------------------------------------------------- flags
 function flags(g){
   var out = [];
   if(!isLive(g)) return out;
+  var su = setups(g), has = {};
+  su.forEach(function(x){ has[x[0]] = 1; out.push(['setup', '★ '+x[1], x[2]]); });
   out = out.concat(tradeFlags(g));                // v1.9: trading entries first (see 'Trading' in the help)
-  if(g.vs && g.vs.ian) out.push(['val','★ Goals value']);
+  if(g.vs && g.vs.ian && !has.goal) out.push(['val','★ Goals value']);
   var m = g.min || (g.st==='ht' ? 45 : 0), sc = g.sc || [0,0];
   if(g.fav && m >= 15){
     var fi = g.fav==='h' ? 0 : 1, oi = 1 - fi;
@@ -471,11 +519,11 @@ function flags(g){
   }
   // corners + cards (tested: see 'What the columns mean')
   var cs = cornerSide(g);
-  if(cs) out.push(['cor','Corners: '+shortName(cs==='h' ? g.h : g.a)]);
+  if(cs && !has.cor) out.push(['cor','Corners: '+shortName(cs==='h' ? g.h : g.a)]);
   var rk = refKind(g);
-  if(rk==='strict') out.push(['crd','Strict ref']);
+  if(rk==='strict' && !has.crd) out.push(['crd','Strict ref']);
   else if(rk==='lenient') out.push(['len','Lenient ref']);
-  if(g.cd && g.cd.brew) out.push(['crd','Cards brewing']);
+  if(g.cd && g.cd.brew && !has.crd) out.push(['crd','Cards brewing']);
   return out;
 }
 var CX_FLAG = 0.75, CX_FLAG_R = 1.35;   // v1.8: flag on 1.35x a normal side at that stage of the game (board 2.2 sends cx.r)
@@ -571,11 +619,17 @@ function beep(){
 function alertKey(g, e){ return g.k+'|'+e.id+'|'+(e.cp||'')+(e.id==='grn' && g.sc ? '|'+g.sc.join('-') : ''); }
 function checkAlerts(){
   var gs = (BOARD && BOARD.games) || [], cur = {}, fresh = [];
+  var trd = UI.alert==='all' || UI.alert==='sel', sup = UI.alert==='su' || UI.alert==='sus';
+  var mine = function(g){ return UI.alert==='all' || UI.alert==='su' || SEL[g.k]; };
   gs.forEach(function(g){
     (g.ts||[]).forEach(function(e){
       if(!(e.act || (e.go && tsShow(e)))) return;
       var k = alertKey(g, e); cur[k] = 1;
-      if(ALERTED && !ALERTED[k] && UI.alert && (UI.alert==='all' || SEL[g.k])) fresh.push(g.h+' v '+g.a+': '+tsName(e)+(e.b ? ' @ '+pr(e.b) : ''));
+      if(ALERTED && !ALERTED[k] && trd && mine(g)) fresh.push(g.h+' v '+g.a+': '+tsName(e)+(e.b ? ' @ '+pr(e.b) : ''));
+    });
+    setups(g).forEach(function(x){                // page 2.2: a setup lining up (again after each goal)
+      var k = g.k+'|S|'+x[0]+'|'+((g.sc||[0,0]).join('-')); cur[k] = 1;
+      if(ALERTED && !ALERTED[k] && sup && mine(g)) fresh.push('Setup ' + x[1] + ': ' + g.h + ' v ' + g.a);
     });
   });
   if(ALERTED === null){ ALERTED = cur; return; }                  // first load: what's already showing isn't new
@@ -1047,6 +1101,7 @@ function filtered(){
     if(UI.selOnly && !SEL[g.k]) return false;
     if(UI.val==='5' && !((bestVal(g)||0) >= 5)) return false;
     if(UI.val==='ian' && !(g.vs && g.vs.ian)) return false;
+    if(UI.setup && !hasSetup(g, UI.setup)) return false;
     return passFilters(g);
   }).sort(function(a,b){
     var stRank = function(g){ return isLive(g) ? 0 : g.st==='nm' ? 1 : g.st==='ns' ? 2 : 3; };
@@ -1171,6 +1226,14 @@ function render(){
   document.querySelectorAll('tr.det, .card .det').forEach(wireChart);
   document.querySelectorAll('#chips button').forEach(function(x){ x.classList.toggle('on', x.getAttribute('data-f')===UI.f); });
   document.querySelectorAll('#presets button').forEach(function(x){ x.classList.toggle('on', x.getAttribute('data-p')===UI.preset); });
+  var scount = {any:0, goal:0, dead:0, cor:0, crd:0};
+  ((BOARD && BOARD.games) || []).forEach(function(g){ var su = setups(g); if(su.length) scount.any++; su.forEach(function(x){ scount[x[0]]++; }); });
+  document.querySelectorAll('#setupsBar button').forEach(function(x){
+    var id = x.getAttribute('data-s');
+    x.classList.toggle('on', id===(UI.setup||''));
+    if(!x.getAttribute('data-l')) x.setAttribute('data-l', x.textContent);
+    x.innerHTML = esc(x.getAttribute('data-l')) + (id && scount[id] ? '<span class="n">'+scount[id]+'</span>' : '');
+  });
   $('sort').value = UI.sort; $('flagsOnly').checked = !!UI.flagsOnly; $('selOnly').checked = !!UI.selOnly; $('val').value = UI.val || '';
   $('flash').value = String(UI.flash);
   $('alert').value = UI.alert || '';
@@ -1250,6 +1313,14 @@ $('saveCustom').addEventListener('click', function(){
   var b = this, t = b.textContent; b.textContent = 'Saved ✓'; setTimeout(function(){ b.textContent = t; }, 1500);
 });
 $('chips').addEventListener('click', function(e){ var t = e.target.closest('button'); if(!t) return; UI.f = t.getAttribute('data-f'); saveUI(); render(); });
+$('setupsBar').addEventListener('click', function(e){
+  var t = e.target.closest('button'); if(!t) return;
+  UI.setup = t.getAttribute('data-s') || '';
+  // show the columns the setup is about (from any built-in set; a Custom set is left alone)
+  var want = (UI.setup==='goal' || UI.setup==='dead') ? 'goals' : (UI.setup==='cor' || UI.setup==='crd') ? 'cc' : null;
+  if(want && UI.preset !== 'custom' && UI.preset !== want && PRESETS[want]) setCols(PRESETS[want], want);
+  saveUI(); render();
+});
 $('league').addEventListener('change', function(){ UI.lg = this.value; saveUI(); render(); });
 $('sort').addEventListener('change', function(){ UI.sort = this.value; saveUI(); render(); });
 $('flagsOnly').addEventListener('change', function(){ UI.flagsOnly = this.checked; saveUI(); render(); });
