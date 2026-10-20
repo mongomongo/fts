@@ -319,6 +319,7 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
     <li><b>Ticks</b>: tick the games you're watching (the box at the start of each row), then use <em>Ticked only</em> or a <em>Ticked is true</em> filter, as Ian does with his imported games.</li>
     <li><b>Goals</b>: the scoring team is coloured green for a minute when a goal comes in (change it with <em>Goal flash</em>). Goal times are under each team: &#9917; 23' 67'p (p = penalty, og = own goal, ~ = minute estimated until SofaScore confirms it).</li>
     <li><b>XG</b>: FTS's modelled total goals before kick-off (NewModel).</li>
+    <li><b>European games</b> (Champions League, Europa League, Conference League): FTS doesn't cover them, so they come from Betfair's own fixture list through the price log. They get the live stats, Betfair prices, value squares (our fair price fitted to Betfair's prices at the off) and the setups, but none of FTS's columns (XG, O2.5 move, trading entries, league angles, half-time cells). The cards flag needs 5 finished games in the competition first. Our fair-price model was fitted on FTS's league games and hasn't been checked on European ones yet.</li>
     <li><b>xG H / xG A</b>: live expected goals for each side (big), with expected goals on target underneath (small).</li>
     <li><b>Momentum</b>: SofaScore attack momentum, one bar a minute. Blue above the line is home pressure, orange below is away. The faint line marks half-time. Markers show what happened when, <b>home above the chart, away below</b>: &#9679; goal, yellow / red card, teal flag = corner. Hover (or open the game) for the minute and team. Goals and cards come from SofaScore's match events at the real minute; SofaScore doesn't give corner times, so a corner is placed between the two stats refreshes either side of it (give or take a couple of minutes, shown faded), and corners taken before the board found the game aren't timed.</li>
     <li><b>Shots</b>: total shots (big) and shots on target (small).</li>
@@ -345,7 +346,7 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
 <footer id="foot">FTS &middot; in-play board &middot; live stats: SofaScore (unofficial) &middot; prices: your Betfair in-play log</footer>
 
 <script>
-window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "2.2.3", "cf": "https://fts-board.memongomemongo.workers.dev/board"};
+window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "2.2.4", "cf": "https://fts-board.memongomemongo.workers.dev/board"};
 (function(){
 'use strict';
 var CFG = window.__BOARD || {};
