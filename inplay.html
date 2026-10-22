@@ -347,7 +347,7 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
 <footer id="foot">FTS &middot; in-play board &middot; live stats: SofaScore (unofficial) &middot; prices: your Betfair in-play log</footer>
 
 <script>
-window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "2.3.0", "cf": "https://fts-board.memongomemongo.workers.dev/board"};
+window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "2.3.1", "cf": "https://fts-board.memongomemongo.workers.dev/board"};
 (function(){
 'use strict';
 var CFG = window.__BOARD || {};
@@ -834,6 +834,9 @@ function priceCell(g, k){
 }
 function lineCell(g, k){
   if(sqOf(g, k)) return square(g, k);
+  // page 2.3.1: a European game with no fair price for this line (e.g. found after kick-off with no 7am prices):
+  // Betfair's Over back on its own, rather than a blank. League games are unchanged.
+  if(isLive(g) && g.eu && g.ln && g.ln[k]) return '<div class="big num" title="Betfair back price for the Over now (no fair price for this game)">'+pr(g.ln[k])+'</div><div class="sm">Betfair</div>';
   if(isLive(g) || isFin(g)) return '';                 // settled line (or no prices): blank, like FTS
   if(k==='OU25' && g.p7 && g.p7.o25) return '<div class="num">'+pr(g.o25o || g.p7.o25)+'</div><div class="sm">'+(g.o25o?'latest':'7am')+'</div>';
   return '';
