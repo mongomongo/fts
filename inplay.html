@@ -124,6 +124,7 @@ td.goalnow .tn::after{content:" GOAL";font-size:10px;font-weight:800;color:var(-
 .fl.trdw{background:transparent;color:var(--ink3);box-shadow:inset 0 0 0 1px var(--line2)}
 .fl.act{background:var(--flag-fav);color:var(--bg)}
 .fl.setup{background:#1f5fae;color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
+.fl.euw{background:transparent;color:var(--ink2);border:1px dashed var(--ink3);padding:0 6px}
 .chips .lab{padding:4px 4px 4px 8px;color:var(--ink3);font-size:12px;align-self:center}
 .chips button .n{display:inline-block;min-width:16px;margin-left:5px;padding:0 4px;border-radius:8px;background:var(--line2);color:var(--ink);font-size:11px;font-weight:700}
 .chips button.on .n{background:rgba(255,255,255,.25);color:inherit}
@@ -319,7 +320,7 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
     <li><b>Ticks</b>: tick the games you're watching (the box at the start of each row), then use <em>Ticked only</em> or a <em>Ticked is true</em> filter, as Ian does with his imported games.</li>
     <li><b>Goals</b>: the scoring team is coloured green for a minute when a goal comes in (change it with <em>Goal flash</em>). Goal times are under each team: &#9917; 23' 67'p (p = penalty, og = own goal, ~ = minute estimated until SofaScore confirms it).</li>
     <li><b>XG</b>: FTS's modelled total goals before kick-off (NewModel).</li>
-    <li><b>European games</b> (Champions League, Europa League, Conference League): FTS doesn't cover them, so they come from Betfair's own fixture list through the price log. They get the live stats, Betfair prices, value squares (our fair price fitted to Betfair's prices at the off) and the setups, but none of FTS's columns (XG, O2.5 move, trading entries, league angles, half-time cells). The cards flag needs 5 finished games in the competition first. Our fair-price model was fitted on FTS's league games and hasn't been checked on European ones yet.</li>
+    <li><b>European games</b> (Champions League, Europa League, Conference League): FTS doesn't cover them, so they come from Betfair's own fixture list through the price log. They get the live stats, Betfair prices, value squares (our fair price fitted to Betfair's prices at the off) and the setups, but none of FTS's columns (XG, O2.5 move, trading entries, league angles, half-time cells). The cards flag needs 5 finished games in the competition first. Our fair-price model was fitted on FTS's league games; checked on 1,970 European games in Betfair's history (2022-26), it rated the draw too high there (the draw lands less often in European games), so <b>for European games only</b> its draw is &times;0.85, with home and away scaled up to match. That makes the draw square lean towards laying the draw; tested, laying it has made only about +2% on liability, so treat a green draw square there as a reason to look. Two dashed <b>Euro</b> labels: <em>Euro: draw watch</em> (level, 30'&ndash;60': a paper-trade watch, no alert) and <em>Euro: fav behind</em> (the favourite a goal down: comebacks are overpriced in European games, so it's a warning against backing the favourite back; the <em>Fav behind, on top</em> flag isn't shown for European games). Second legs of knockout ties aren't priced with the aggregate score in mind. League games are unchanged.</li>
     <li><b>xG H / xG A</b>: live expected goals for each side (big), with expected goals on target underneath (small).</li>
     <li><b>Momentum</b>: SofaScore attack momentum, one bar a minute. Blue above the line is home pressure, orange below is away. The faint line marks half-time. Markers show what happened when, <b>home above the chart, away below</b>: &#9679; goal, yellow / red card, teal flag = corner. Hover (or open the game) for the minute and team. Goals and cards come from SofaScore's match events at the real minute; SofaScore doesn't give corner times, so a corner is placed between the two stats refreshes either side of it (give or take a couple of minutes, shown faded), and corners taken before the board found the game aren't timed.</li>
     <li><b>Shots</b>: total shots (big) and shots on target (small).</li>
@@ -346,7 +347,7 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
 <footer id="foot">FTS &middot; in-play board &middot; live stats: SofaScore (unofficial) &middot; prices: your Betfair in-play log</footer>
 
 <script>
-window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "2.2.4", "cf": "https://fts-board.memongomemongo.workers.dev/board"};
+window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "2.3.0", "cf": "https://fts-board.memongomemongo.workers.dev/board"};
 (function(){
 'use strict';
 var CFG = window.__BOARD || {};
@@ -520,7 +521,13 @@ function flags(g){
   out = out.concat(tradeFlags(g));                // v1.9: trading entries first (see 'Trading' in the help)
   if(g.vs && g.vs.ian && !has.goal) out.push(['val','★ Goals value']);
   var m = g.min || (g.st==='ht' ? 45 : 0), sc = g.sc || [0,0];
-  if(g.fav && m >= 15){
+  // page 2.3: European games get their own watch labels (board 2.8 'eux'); no 'Fav behind, on top' there, because
+  // European favourites a goal down come back less often than priced (backing them lost 13-26%, 2022-26)
+  if(g.eux){
+    if(g.eux.indexOf('ltd') >= 0) out.push(['euw', 'Euro: draw watch', EUW.ltd]);
+    if(g.eux.indexOf('fb') >= 0) out.push(['euw', 'Euro: fav behind', EUW.fb]);
+  }
+  if(g.fav && m >= 15 && !g.eu){
     var fi = g.fav==='h' ? 0 : 1, oi = 1 - fi;
     if((sc[fi]||0) < (sc[oi]||0)){
       var ok = false, sotOk = !g.sot || g.sot[fi] >= g.sot[oi];
@@ -543,6 +550,10 @@ function flags(g){
   if(g.cd && g.cd.brew && !has.crd) out.push(['crd','Cards brewing']);
   return out;
 }
+var EUW = {
+  ltd: "Watch only (no alert). European game, level between 30' and 60'. Betfair history 2022-26: in this spot European draws landed 28.3% vs 30.0% priced (1,081 games), while league games landed more draws than priced. Laying the draw at the first level reading made +1.7% on liability one tick worse (±1.8%); league games lost 2.8%. Seasons were mixed (22/23 and 26/27 so far negative), so paper-trade it before staking.",
+  fb: "Warning, not a bet. European game, the pre-match favourite is one goal behind (15'-75'). In 542 European games (2022-26) the favourite then won 20.7% vs 23.4% priced: comebacks are overpriced, and backing the favourite here lost 13-26% depending on the minute. Laying it was about break-even (+1.4% ±1.9%)."
+};
 var CX_FLAG = 0.75, CX_FLAG_R = 1.35;   // v1.8: flag on 1.35x a normal side at that stage of the game (board 2.2 sends cx.r)
 function shortName(n){ n = String(n||''); return n.length > 13 ? n.slice(0,12)+'…' : n; }
 function cornerSide(g){
@@ -1073,7 +1084,8 @@ function detail(g){
         var e = g.vs.sq[k];
         return '<tr><td>'+esc(nm[k] || lineLab(k))+'</td><td><b>'+pr(e.f)+'</b></td><td>'+e.p+'%</td><td>'+(e.b?pr(e.b)+(e.old?' <span class="muted">(old)</span>':''):'<span class="muted">&ndash;</span>')+'</td><td style="'+sqBg(e.v)+'">'+(e.v!=null?(e.v>0?'+':'')+e.v+'%':'')+'</td></tr>';
       }).join('')+'</table><div class="sm" style="margin-top:4px">Pre-match from '+esc(src)+': '+f2(g.vs.lam[0])+' &ndash; '+f2(g.vs.lam[1])+' goals'+
-      (g.vs.xm ? ' &middot; live xG nudge &times;'+g.vs.xm[0]+' / &times;'+g.vs.xm[1] : '')+(g.vs.rc ? ' &middot; red card allowed for (refitted 18 Oct on 285 games; no Goal coming / Going dead setups after a sending-off until it has been checked against Betfair)' : '')+'</div>';
+      (g.vs.xm ? ' &middot; live xG nudge &times;'+g.vs.xm[0]+' / &times;'+g.vs.xm[1] : '')+(g.vs.rc ? ' &middot; red card allowed for (refitted 18 Oct on 285 games; no Goal coming / Going dead setups after a sending-off until it has been checked against Betfair)' : '')+
+      (g.vs.eu ? ' &middot; European game: draw &times;'+g.vs.eu+' (draws land less often in European games than in the league games our model was fitted on; home and away scaled up to match)' : '')+'</div>';
   }
   if(g.ssrc==='ls' || g.msrc==='ls') kv.push(['Live data from', 'LiveScore <span class="muted">(SofaScore unavailable: no xG or momentum)</span>']);
   if(g.sn) kv.push(['SofaScore', esc(g.sn[0])+' v '+esc(g.sn[1]) + (g.url ? ' &middot; <a href="'+esc(g.url)+'" target="_blank" rel="noopener">open</a>' : '')]);
