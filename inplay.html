@@ -125,6 +125,14 @@ td.goalnow .tn::after{content:" GOAL";font-size:10px;font-weight:800;color:var(-
 .fl.act{background:var(--flag-fav);color:var(--bg)}
 .fl.setup{background:#1f5fae;color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
 .fl.euw{background:transparent;color:var(--ink2);border:1px dashed var(--ink3);padding:0 6px}
+.fl.trdx{background:transparent;color:var(--flag-trd);border:1px dashed var(--flag-trd);padding:0 6px}
+.slok{color:var(--flag-trd);font-weight:700}
+.slno{color:var(--ink3)}
+.slp{color:var(--ink2)}
+.warnx{color:var(--live)}
+.cov{margin-top:12px;font-size:12.5px}
+.cov input{width:58px;margin:2px 4px 2px 0}
+.cov .covout{display:block;margin-top:4px}
 .chips .lab{padding:4px 4px 4px 8px;color:var(--ink3);font-size:12px;align-self:center}
 .chips button .n{display:inline-block;min-width:16px;margin-left:5px;padding:0 4px;border-radius:8px;background:var(--line2);color:var(--ink);font-size:11px;font-weight:700}
 .chips button.on .n{background:rgba(255,255,255,.25);color:inherit}
@@ -280,6 +288,7 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
       <button data-s="dead" title="From 30' or at half-time: Under the next goal line 5%+ value against our fair price, after allowing for our model's usual lean to Unders">Going dead</button>
       <button data-s="cor" title="One side expected to win 1.35x+ the normal corners in the next 10 minutes">Corners</button>
       <button data-s="crd" title="Cards brewing (fouls 1.25x the league norm from 55', 0-1 goal in it), referee not lenient">Cards</button>
+      <button data-s="ian1" title="Ian's In-Play Tool Strategies v1.0: games on his shortlist (and games still waiting for Betfair's Over 2.5 price before kick-off); in play his four entries show in Entry and Flags">Ian v1</button>
     </div>
   </div>
   <div class="legend"><span><span class="sw" style="background:var(--home)"></span>Home pressure</span><span><span class="sw" style="background:var(--away)"></span>Away pressure</span><span><span class="sw" style="background:rgba(var(--vpos),.6)"></span>value</span><span><span class="sw" style="background:rgba(var(--vneg),.6)"></span>no value</span><span><span class="sw" style="background:var(--goal)"></span>just scored</span><span class="muted">Squares: our fair price on top, Betfair below &middot; big = xG / shots, small = on target &middot; bold team = favourite &middot; &#9917; goal times (~ = minute estimated)</span></div>
@@ -341,13 +350,21 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
         <li><b>Angle</b> (league angles): moments where one league has beaten the board's own league-blind price since 2021, and kept doing so in the later seasons. Brazil 0-0 at 25' and Brazil / Poland 0-0 at 35' (first-half goal), a 1-goal lead at 70' (another goal: Bundesliga, Poland, Swiss, Ligue 1, Austria, Eredivisie, Premier League; no more goals: J-League, Championship), the Championship after 80' (no more goals), and the Bundesliga after 60' (2+ more goals). The angle's price is our chance plus that league's effect, shrunk towards zero so a small league doesn't stand out by luck. The flag shows only when Betfair is at or above it. Where we could check against real prices (at half-time), Betfair already allowed for about half of each league effect, so expect less than the history suggests. Each one is checked against the logged Betfair prices before it's trusted.</li>
         <li><b>Alerts</b>: choose <em>Alerts: ticked games</em> or <em>all games</em> for a beep (and a browser notification, if you allow it) when a flag turns &check; or a green-up comes, or <em>Alerts: setups</em> to beep only when one of the four setups lines up. Keep the page open. Every entry is saved, so we can check later whether they made money.</li>
       </ul></li>
+    <li><b>Ian v1</b> (the <em>Ian v1</em> button in the Setups bar, and the <em>Ian v1</em> column in the <em>Trading</em> set): Ian's <em>In-Play Tool Strategies v1.0</em> (October 2026), as he went through them in his 31 October live session. <b>Shortlist</b> (&check; on it, &times; not, &hellip; waiting for Betfair's prices before kick-off): Over 2.5 at 2.20 or shorter and shortened by more than 1% since 7am, FTS pre-match xG 2.00+, not the A-League, Eerste Divisie, K League or MLS. In play a shortlisted game gets his four entries, each shown only while <em>all</em> its rules are met: outlined with a timer at first, &check; once they've held for a minute (Ian waits for the value to hold about a minute). Value is the same sum as FTS's, (Betfair &minus; fair) &divide; Betfair, 5%+ needed.
+      <ul>
+        <li><b>01 FH 0.5 at 0-0</b>: 20' to half-time, 0-0, first-half Over 0.5 at 2.00+, live xG 0.75+. Betfair history 2024&ndash;26: &minus;18.1% on 4,970 bets, negative every season (the value rule picked worse bets than backing every shortlisted 0-0 at 2.00+, &minus;6.6%), so it's a dashed &check; &#9888; with no beep.</li>
+        <li><b>02 2nd FH goal</b>: one goal, scored by 15', in by 35', first-half Over 1.5 at 2.00+, live xG 1.25+. Not checked: our Betfair history has no first-half Over 1.5 prices in play.</li>
+        <li><b>03 2 ahead, 1 ahead cover</b>: 45'&ndash;65' (drips about 50', 57', 65'), Over (goals + 1.5) with 5%+ value and Over (goals + 0.5) 5%+ too, live xG 1.00+ at 0 goals, 1.50+ at 1, 2.50+ at 2. Once the 1 ahead reaches 2.00 at the same score, <em>Ian 03: cover 1 ahead now</em> shows; cover stake = your 2-ahead stakes &divide; (odds &minus; 1), with a calculator in the game's details. Betfair history 2024&ndash;26: at 0-0 +10.1% on 642 bets, positive in all three seasons; at 1 or 2 goals it lost (&minus;6.6%, &minus;6.9%), so those show a <b>dashed &check; &#9888;</b> and don't beep.</li>
+        <li><b>04 Late goal</b>: from 75', Over (goals + 0.5) at 1.80+ for each drip (about 75', 80', 85', each checked on its own). Betfair history 2024&ndash;26: &minus;13.5% on 16,397 bets, losing at every price and score, so it's a dashed &check; &#9888; with no beep. Paper-trade 01 and 04.</li>
+      </ul>
+      What the board can't copy: FTS's &ldquo;sample 10+&rdquo; (FTS's fair price comes from similar past games; ours is our model's), and live xG is SofaScore's, so 01&ndash;03 can't show where SofaScore has no xG. The history checks used Over 2.5 at the off &le; 2.20 and the league exclusions, not the 7am move, FTS xG or live xG. Every entry is logged for the November review.</li>
     <li>xG and xG on target are only available in leagues where SofaScore has them. Elsewhere you still get shots, shots on target and momentum.</li>
   </ul>
 </details>
 <footer id="foot">FTS &middot; in-play board &middot; live stats: SofaScore (unofficial) &middot; prices: your Betfair in-play log</footer>
 
 <script>
-window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "2.3.1", "cf": "https://fts-board.memongomemongo.workers.dev/board"};
+window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "2.4.0", "cf": "https://fts-board.memongomemongo.workers.dev/board"};
 (function(){
 'use strict';
 var CFG = window.__BOARD || {};
@@ -510,7 +527,10 @@ function setups(g){
     'Fouls 1.25x+ the league norm from 55\', 0-1 goal in it (tested: 1.16x yellows from 60\', 1.38x from 70\')'+(rk==='strict' ? '; strict referee, about 13% more' : '')+'.']);
   return out;
 }
-function hasSetup(g, id){ var su = setups(g); return id==='any' ? su.length > 0 : su.some(function(x){ return x[0]===id; }); }
+function hasSetup(g, id){
+  if(id==='ian1') return ianOn(g);                   // page 2.4: Ian v1 = his shortlist (and games still waiting for its prices)
+  var su = setups(g); return id==='any' ? su.length > 0 : su.some(function(x){ return x[0]===id; });
+}
 
 // ---------------------------------------------------------------- flags
 function flags(g){
@@ -579,9 +599,70 @@ function mkLab(e){
   return (m[1]==='FH'?'FH ':'')+(e.sd==='u'?'Under ':'Over ')+m[2]+'.5';
 }
 // FTS's own entries: only when Betfair beats FTS's minimum AND our fair price; league angles: only at or above the angle's price
-function tsShow(e){ return !!(e.act || e.src==='card' || e.src==='ht' || (e.src==='fts' && e.go && e.fo) || (e.src==='lg' && e.go)); }
+// Ian v1 entries (board 2.9, src 'ian'): sent only while every rule is met; go = held for a minute
+function tsShow(e){ return !!(e.act || e.src==='card' || e.src==='ht' || e.src==='ian' || (e.src==='fts' && e.go && e.fo) || (e.src==='lg' && e.go)); }
 function tsName(e){ return e.src==='fts' ? 'FTS: '+e.nm : e.src==='lg' ? 'Angle: '+e.nm : e.nm; }
+// ---------------------------------------------------------------- Ian v1 (In-Play Tool Strategies v1.0, Oct 2026)
+var IAN_EV = {
+  i1: "Betfair history (2024-26, approx. shortlist, no live xG): -18.1% on 4,970 bets, negative in all three seasons; the 5%+ value rule picked worse bets than backing every shortlisted 0-0 at 2.00+ (-6.6%). Paper-trade it.",
+  i2: "Not checked on Betfair's history: our extract has no first-half Over 1.5 prices in play.",
+  i3: "Betfair history (2024-26, approx. shortlist, no live xG): at 0-0 (Over 1.5) +10.1% on 642 bets, positive in all three seasons; at 1 goal -6.6%, at 2 goals -6.9%. Before 52' it lost.",
+  i4: "Betfair history (2024-26, approx. shortlist): -13.5% on 16,397 bets, losing at every price and every score. Paper-trade it."
+};
+function mmss(s){ s = Math.max(0, Math.round(s||0)); return Math.floor(s/60)+':'+('0'+(s%60)).slice(-2); }
+function ianWarn(e){ return (e.id==='i4' || e.id==='i1') ? 'lost in history' : (e.id==='i3' && e.mk!=='OU15') ? 'lost at 1-2 goals' : ''; }
+function ianTip(e){
+  if(e.act) return e.nm + (e.x && e.x.per!=null ? '\nBack '+mkLab(e)+' at '+pr(e.b)+': cover stake = your 2-ahead stakes ÷ ('+pr(e.b)+' - 1) = '+e.x.per.toFixed(2)+' for every 1 staked on the 2 ahead (calculator in the game\'s details)' : '');
+  var t = e.nm+': back '+mkLab(e)+(e.id==='i3' ? ' (2 ahead)' : e.id==='i4' || e.id==='i1' ? ' (1 ahead)' : '');
+  t += '\n✓ Betfair '+pr(e.b)+(e.mn ? ' (needs '+pr(e.mn)+'+)' : '');
+  t += '\n✓ Value '+(e.v>=0?'+':'')+e.v+'% against our fair '+pr(e.f)+' (needs 5%+)';
+  if(e.x && e.x.one) t += '\n✓ 1 ahead ('+mkLab({mk:e.x.one, sd:'o'})+') 5%+ value too';
+  if(e.x && e.x.need!=null) t += '\n✓ Live xG '+f2(e.lxg)+' (needs '+f2(e.x.need)+'+)';
+  if(e.x && e.x.g1!=null) t += "\n✓ First goal "+e.x.g1+"' (by 15')";
+  if(e.x && e.x.drip!=null) t += '\nDrips '+(e.id==='i3' ? "~50', 57', 65'" : "~75', 80', 85'")+': '+(e.x.next ? 'next '+e.x.next+"'" : 'the last one now')+(e.id==='i4' ? ' (check each on its own)' : '');
+  t += '\n'+(e.go ? '✓ Held for a minute' : 'All rules met for '+mmss(e.hold)+': Ian waits for the value to hold about a minute');
+  t += "\nNot checked: FTS's sample of 10+ similar games (the board has no equivalent). Value here is against our fair price, not FTS's; live xG is SofaScore's.";
+  if(IAN_EV[e.id]) t += '\n'+IAN_EV[e.id];
+  return t;
+}
+function ianOn(g){ return !!(g.sl && g.sl.ok!==0 && !g.eu); }
+function slTip(g){
+  var s = g.sl || {}, no = {}; (s.no||[]).forEach(function(k){ no[k] = 1; });
+  var t = "Ian's shortlist (In-Play Tool Strategies v1.0): "+(s.ok===1 ? 'on it' : s.ok===0 ? 'not on it' : "waiting for Betfair's Over 2.5 price before kick-off");
+  t += '\n'+(no.o25 ? '✗' : s.o25!=null ? '✓' : '·')+' Over 2.5 at 2.20 or shorter: '+(s.o25!=null ? pr(s.o25)+(isLive(g)||isFin(g) ? ' at the off' : ' now') : 'no price yet');
+  t += '\n'+(no.move ? '✗' : s.mv!=null ? '✓' : '·')+' Over 2.5 shortened more than 1% since 7am: '+(s.o7 ? '7am '+pr(s.o7) : 'no 7am price')+(s.mv!=null ? ', '+(s.mv>0 ? 'in ' : 'out ')+Math.abs(s.mv).toFixed(1)+'%' : '');
+  t += '\n'+(no.xg ? '✗' : '✓')+' FTS pre-match xG 2.00+: '+(s.xg!=null ? f2(s.xg) : 'none');
+  t += '\n'+(no.league ? '✗ Excluded league (A-League, Eerste Divisie, K League, MLS)' : '✓ League not excluded');
+  return t;
+}
+function slCell(g){
+  var s = g.sl; if(!s || g.eu) return '<span class="muted">&ndash;</span>';
+  var lab = s.ok===1 ? '&check;' : s.ok===0 ? '&times;' : '&hellip;', cls = s.ok===1 ? 'slok' : s.ok===0 ? 'slno' : 'slp';
+  return '<div title="'+esc(slTip(g))+'"><span class="'+cls+'">'+lab+'</span>'+(s.mv!=null ? '<div class="sm num">'+(s.mv>0?'in ':'out ')+Math.abs(s.mv).toFixed(1)+'%</div>' : '')+'</div>';
+}
+function slSort(g){ return g.sl && !g.eu ? (g.sl.ok===1 ? 2 : g.sl.ok===0 ? 0 : 1) : null; }
+function ianAny(g, held){ return (g.ts||[]).some(function(e){ return e.src==='ian' && !e.act && (!held || e.go); }); }
+var COV = {};
+function covVals(k){ var c = COV[k] || {}; return [c.s1, c.s2, c.s3, c.o]; }
+function covOut(k, dflt){
+  var v = covVals(k), s = 0, n = 0;
+  [v[0], v[1], v[2]].forEach(function(x){ x = parseFloat(x); if(x > 0){ s += x; n++; } });
+  var o = parseFloat(v[3]) || dflt;
+  if(!n || !(o > 1)) return 'Cover = 2-ahead stakes &divide; (1-ahead odds &minus; 1). Ian places it once the 1 ahead is 2.00+.';
+  var c = s / (o - 1);
+  return 'Back the 1 ahead <b>'+c.toFixed(2)+'</b> at '+pr(o)+(o < 2 ? ' <span class="warnx">(below 2.00: Ian waits)</span>' : '')+
+         ' &middot; exactly one more goal: about level &middot; no more goals: &minus;'+(s + c).toFixed(2)+' <span class="muted">(before commission)</span>';
+}
+function coverCalc(g){
+  var gl = g.sc ? (g.sc[0]||0)+(g.sc[1]||0) : 0, cv = (g.ts||[]).filter(function(e){ return e.id==='i3c'; })[0];
+  var e = sqOf(g, 'OU'+gl+'5'), dflt = cv && cv.b ? cv.b : e && e.b ? e.b : null, v = covVals(g.k);
+  var inp = function(id, ph, val){ return '<input type="number" step="any" min="0" inputmode="decimal" data-cv="'+id+'" placeholder="'+esc(ph)+'" value="'+esc(val==null?'':val)+'">'; };
+  return '<div class="cov" data-ck="'+esc(g.k)+'" data-cd="'+(dflt||'')+'"><p class="dh">Ian 03 cover</p>'+
+    '2-ahead stakes '+inp('s1','1st',v[0])+inp('s2','2nd',v[1])+inp('s3','3rd',v[2])+' 1-ahead odds '+inp('o', dflt ? pr(dflt) : 'odds', v[3])+
+    '<span class="covout num">'+covOut(g.k, dflt)+'</span></div>';
+}
 function tsTip(e){
+  if(e.src==='ian') return ianTip(e);
   if(e.act) return e.nm;
   var t = tsName(e)+': back '+mkLab(e);
   if(e.b) t += '\nBetfair '+pr(e.b)+(e.old ? ' (old, or taken at another score: not used)' : '');
@@ -599,6 +680,11 @@ function tradeFlags(g){
   var out = [];
   (g.ts||[]).forEach(function(e){
     if(!tsShow(e)) return;
+    if(e.src==='ian' && !e.act){                    // page 2.4: Ian v1, outlined while the minute runs; dashed ✓ = history says no
+      var w = ianWarn(e);
+      out.push(e.go ? [w ? 'trdx' : 'trd', tsName(e)+' ✓'+(w ? ' ⚠' : ''), tsTip(e)] : ['trdw', tsName(e)+' · '+mmss(e.hold), tsTip(e)]);
+      return;
+    }
     if(e.act) out.push(['act', e.nm, tsTip(e)]);
     else if(e.go) out.push(['trd', tsName(e)+' ✓', tsTip(e)]);
     else out.push(['trdw', tsName(e)+(e.old ? ' · old price' : e.b ? ' · below min' : ' · no price'), tsTip(e)]);
@@ -623,6 +709,15 @@ function entryCell(g){
   var ts = g.ts || [];
   if(!ts.length) return '<span class="muted">&ndash;</span>';
   return ts.map(function(e){
+    if(e.src==='ian'){
+      if(e.act) return '<div class="ent act" title="'+esc(tsTip(e))+'"><span class="en">'+esc(e.nm)+'</span>'+
+        (e.x && e.x.per!=null ? '<div class="sm num">'+esc(mkLab(e))+' '+pr(e.b)+': cover '+e.x.per.toFixed(2)+' per 1 on the 2 ahead</div>' : '')+'</div>';
+      var w = ianWarn(e), iv = e.v!=null ? ' <span style="'+sqBg(e.v)+';border-radius:3px;padding:0 3px">'+(e.v>0?'+':'')+e.v+'%</span>' : '';
+      return '<div class="ent'+(e.go && !w ? ' go' : '')+'" title="'+esc(tsTip(e))+'"><span class="en">'+esc(e.nm)+'</span>'+
+        '<div class="sm num">'+esc(mkLab(e))+': BF '+pr(e.b)+(e.mn ? ' (min '+pr(e.mn)+')' : '')+iv+'</div>'+
+        '<div class="sm num">'+(e.x && e.x.need!=null ? 'xG '+f2(e.lxg)+'/'+f2(e.x.need)+' &middot; ' : '')+(e.go ? 'held &check;' : 'holding '+mmss(e.hold))+
+        (e.x && e.x.next ? " &middot; next drip "+e.x.next+"'" : '')+(w ? ' &middot; <span class="warnx">&#9888; '+w+'</span>' : '')+'</div></div>';
+    }
     if(e.act) return '<div class="ent act" title="'+esc(tsTip(e))+'"><span class="en">'+esc(e.nm)+'</span></div>';
     var v = e.v!=null ? ' <span style="'+sqBg(e.v)+';border-radius:3px;padding:0 3px">'+(e.v>0?'+':'')+e.v+'%</span>' : '';
     return '<div class="ent'+(e.go && tsShow(e) ? ' go' : '')+'" title="'+esc(tsTip(e))+'"><span class="en">'+esc(tsName(e))+'</span>'+
@@ -644,7 +739,7 @@ function beep(){
     });
   }catch(e){}
 }
-function alertKey(g, e){ return g.k+'|'+e.id+'|'+(e.cp||'')+(e.id==='grn' && g.sc ? '|'+g.sc.join('-') : ''); }
+function alertKey(g, e){ return g.k+'|'+e.id+'|'+(e.cp||'')+(e.id==='grn' && g.sc ? '|'+g.sc.join('-') : '')+(e.src==='ian' ? '|'+(e.mk||'') : ''); }
 function checkAlerts(){
   var gs = (BOARD && BOARD.games) || [], cur = {}, fresh = [];
   var trd = UI.alert==='all' || UI.alert==='sel', sup = UI.alert==='su' || UI.alert==='sus';
@@ -652,6 +747,7 @@ function checkAlerts(){
   gs.forEach(function(g){
     (g.ts||[]).forEach(function(e){
       if(!(e.act || (e.go && tsShow(e)))) return;
+      if(e.src==='ian' && !e.act && ianWarn(e)) return;    // page 2.4: no beep for an Ian entry that has lost in history
       var k = alertKey(g, e); cur[k] = 1;
       if(ALERTED && !ALERTED[k] && trd && mine(g)) fresh.push(g.h+' v '+g.a+': '+tsName(e)+(e.b ? ' @ '+pr(e.b) : ''));
     });
@@ -909,6 +1005,7 @@ var COLS = [
   {id:'flags', lab:'Flags', name:'Flags', grp:'match', stk:1, cls:'l', cell:function(g){ return flagsCell(flags(g)); }, sv:function(g){ return flags(g).length; }},
   {id:'pxg', lab:'XG', name:'XG (FTS pre-match)', grp:'model', title:'FTS pre-match total xG', cell:function(g){ return g.pxg!=null ? '<span class="num">'+f2(g.pxg)+'</span>' : '<span class="muted">&ndash;</span>'; }, sv:function(g){ return g.pxg; }},
   {id:'o25mv', lab:'O2.5 move', name:'O2.5 move (7am to off)', grp:'model', title:'Over 2.5 back: 7am to the last price before kick-off', cell:o25Cell, sv:o25Move},
+  {id:'isl', lab:'Ian v1', name:"Ian v1 shortlist", grp:'model', title:"Ian's shortlist (In-Play Tool Strategies v1.0): Over 2.5 at 2.20 or shorter and shortened 1%+ since 7am, FTS xG 2.00+, not A-League / Eerste Divisie / K League / MLS. Underneath: how far Over 2.5 has come in since 7am", cell:slCell, sv:slSort},
   {id:'xgh', lab:'xG H', name:'Home xG (live)', grp:'live', cell:function(g){ return pairCell(g,'xg','xgot',0,true); }, sv:function(g){ return g.xg ? g.xg[0] : null; }},
   {id:'xga', lab:'xG A', name:'Away xG (live)', grp:'live', cell:function(g){ return pairCell(g,'xg','xgot',1,true); }, sv:function(g){ return g.xg ? g.xg[1] : null; }},
   {id:'mom', lab:'Momentum', name:'Momentum', grp:'live', cls:'mom', cell:function(g){ return momSvg(g.mom, 120, 40, {ev: chartEvents(g), g: g, lane: 6}); }, sv:mom10},
@@ -932,7 +1029,7 @@ var PRESETS = {
   goals: BASE.concat(['OU05','OU15','OU25','OU35','OU45','FH05','FH15']),
   mo: BASE.concat(['h','d','a','o25mv']),
   cc: BASE.concat(['cor','crd','ref']),
-  tr: BASE.concat(['card','entry','OU05','OU15','OU25','FH05','FH15']),
+  tr: BASE.concat(['isl','card','entry','OU05','OU15','OU25','FH05','FH15']),
   all: COLS.map(function(c){ return c.id; }).filter(function(id){ return id!=='ko' && id!=='lg'; })
 };
 function sqV(g, k){ var e = sqOf(g, k); return e && e.v!=null ? e.v : null; }
@@ -985,7 +1082,10 @@ var FIELDS = [
   {id:'o25mv', lab:'O2.5 move 7am to off', t:'num', get:o25Move},
   {id:'sel', lab:'Ticked', t:'bool', get:function(g){ return !!SEL[g.k]; }},
   {id:'flag', lab:'Flagged', t:'bool', get:function(g){ return flags(g).length > 0; }},
-  {id:'ian', lab:'★ Goals value (Ian’s rule)', t:'bool', get:function(g){ return !!(g.vs && g.vs.ian); }}
+  {id:'ian', lab:'★ Goals value (Ian’s rule)', t:'bool', get:function(g){ return !!(g.vs && g.vs.ian); }},
+  {id:'isl', lab:'Ian v1: on the shortlist', t:'bool', get:function(g){ return !!(g.sl && g.sl.ok===1 && !g.eu); }},
+  {id:'iok', lab:'Ian v1: entry rules all met now', t:'bool', get:function(g){ return ianAny(g); }},
+  {id:'igo', lab:'Ian v1: entry held a minute (✓)', t:'bool', get:function(g){ return ianAny(g, true); }}
 ];
 SQK.forEach(function(k){
   var nm = {h:'Home', d:'Draw (lay)', a:'Away'}[k] || lineLab(k);
@@ -1070,6 +1170,7 @@ function detail(g){
   if(g.p7) kv.push(['7am Betfair H/D/A', [g.p7.h,g.p7.d,g.p7.a].map(pr).join(' / ')]);
   if(g.off) kv.push(['At the off H/D/A', [g.off.h,g.off.d,g.off.a].map(pr).join(' / ')]);
   if(g.p7 && g.p7.o25) kv.push(['Over 2.5', '7am '+pr(g.p7.o25)+(g.o25o ? ' &rarr; '+(isLive(g)||isFin(g)?'off ':'latest ')+pr(g.o25o) : '')]);
+  if(g.sl && !g.eu) kv.push(['Ian v1 shortlist', esc(slTip(g)).replace(/\n/g, '<br>')]);
   if(g.px) kv.push(['Now H/D/A', [g.px.h,g.px.d,g.px.a].map(pr).join(' / ') + (g.px.age!=null ? ' <span class="muted">('+Math.round(g.px.age/60)+' min old)</span>' : '')]);
   if(g.ct && g.ct.length) g.ct.forEach(function(c){
     kv.push(['Trading Card', esc(c.nm)+pkChip(c)+(c.mins && c.mins.length ? ' &middot; minimum '+c.mins.map(function(x){ return x[0]+"' "+pr(x[1]); }).join(', ') : '')+
@@ -1095,7 +1196,8 @@ function detail(g){
   if(g.sat) kv.push(['Stats updated', new Date(g.sat*1000).toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'})]);
   return '<div class="detgrid"><div><p class="dh">Momentum</p>'+mom+
     (bars ? '<p class="dh" style="margin-top:12px">'+esc(g.h)+' v '+esc(g.a)+'</p><div class="bars">'+bars+'</div>' : '')+
-    '</div><div><p class="dh">Game</p><div class="kv">'+kv.map(function(p){ return '<span>'+p[0]+'</span><b class="num">'+p[1]+'</b>'; }).join('')+'</div>'+vt+'</div></div>';
+    '</div><div><p class="dh">Game</p><div class="kv">'+kv.map(function(p){ return '<span>'+p[0]+'</span><b class="num">'+p[1]+'</b>'; }).join('')+'</div>'+vt+
+    (ianOn(g) && !isFin(g) ? coverCalc(g) : '')+'</div></div>';
 }
 function wireChart(root){
   var c = root.querySelector('.chart'); if(!c) return;
@@ -1250,16 +1352,22 @@ function render(){
       ((g.ts||[]).some(function(e){ return !e.act; }) ? '<div class="c5">'+entryCell(g)+'</div>' : '')+
       (open ? '<div class="det">'+detail(g)+'</div>' : '')+'</div>');
   });
+  var af = document.activeElement, keep = null;          // page 2.4: keep typing in the cover calculator across refreshes
+  if(af && af.getAttribute && af.getAttribute('data-cv') && af.closest('.cov')) keep = [af.closest('.cov').getAttribute('data-ck'), af.getAttribute('data-cv'), !!af.closest('#cards')];
   $('tb').innerHTML = tb.join('');
   $('cards').innerHTML = cards.join('');
+  if(keep) [].some.call((keep[2] ? $('cards') : $('tb')).querySelectorAll('.cov'), function(b){
+    if(b.getAttribute('data-ck') !== keep[0]) return false;
+    var i = b.querySelector('[data-cv="'+keep[1]+'"]'); if(i) i.focus(); return true;
+  });
   $('empty').hidden = rows.length > 0;
   stickify();
   var sa = $('selAll'); if(sa){ sa.checked = rows.length > 0 && rows.every(function(g){ return SEL[g.k]; }); }
   document.querySelectorAll('tr.det, .card .det').forEach(wireChart);
   document.querySelectorAll('#chips button').forEach(function(x){ x.classList.toggle('on', x.getAttribute('data-f')===UI.f); });
   document.querySelectorAll('#presets button').forEach(function(x){ x.classList.toggle('on', x.getAttribute('data-p')===UI.preset); });
-  var scount = {any:0, goal:0, dead:0, cor:0, crd:0};
-  ((BOARD && BOARD.games) || []).forEach(function(g){ var su = setups(g); if(su.length) scount.any++; su.forEach(function(x){ scount[x[0]]++; }); });
+  var scount = {any:0, goal:0, dead:0, cor:0, crd:0, ian1:0};
+  ((BOARD && BOARD.games) || []).forEach(function(g){ var su = setups(g); if(su.length) scount.any++; su.forEach(function(x){ scount[x[0]]++; }); if(ianOn(g) && !isFin(g)) scount.ian1++; });
   document.querySelectorAll('#setupsBar button').forEach(function(x){
     var id = x.getAttribute('data-s');
     x.classList.toggle('on', id===(UI.setup||''));
@@ -1349,7 +1457,7 @@ $('setupsBar').addEventListener('click', function(e){
   var t = e.target.closest('button'); if(!t) return;
   UI.setup = t.getAttribute('data-s') || '';
   // show the columns the setup is about (from any built-in set; a Custom set is left alone)
-  var want = (UI.setup==='goal' || UI.setup==='dead') ? 'goals' : (UI.setup==='cor' || UI.setup==='crd') ? 'cc' : null;
+  var want = (UI.setup==='goal' || UI.setup==='dead') ? 'goals' : (UI.setup==='cor' || UI.setup==='crd') ? 'cc' : UI.setup==='ian1' ? 'tr' : null;
   if(want && UI.preset !== 'custom' && UI.preset !== want && PRESETS[want]) setCols(PRESETS[want], want);
   saveUI(); render();
 });
@@ -1392,6 +1500,12 @@ function toggle(e){
   var k = r.getAttribute('data-k'); if(OPEN[k]) delete OPEN[k]; else OPEN[k] = 1; render();
 }
 $('tb').addEventListener('change', onSel);
+document.addEventListener('input', function(e){            // page 2.4: Ian 03 cover calculator
+  var t = e.target; if(!t || !t.getAttribute || !t.getAttribute('data-cv')) return;
+  var box = t.closest('.cov'); if(!box) return;
+  var k = box.getAttribute('data-ck'); COV[k] = COV[k] || {}; COV[k][t.getAttribute('data-cv')] = t.value;
+  box.querySelector('.covout').innerHTML = covOut(k, parseFloat(box.getAttribute('data-cd')) || null);
+});
 $('cards').addEventListener('change', onSel);
 $('tb').addEventListener('click', toggle);
 $('cards').addEventListener('click', toggle);
