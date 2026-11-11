@@ -175,6 +175,7 @@ td.goalnow .tn::after{content:" GOAL";font-size:10px;font-weight:800;color:var(-
 .chart{position:relative}
 .tip{position:absolute;pointer-events:none;background:var(--panel2);border:1px solid var(--line2);border-radius:6px;padding:3px 7px;font-size:11.5px;white-space:nowrap;transform:translate(-50%,-110%)}
 .vt{width:100%;max-width:460px;border-collapse:collapse;font-size:12.5px}
+.b365b{font-size:11px;padding:1px 8px;cursor:pointer}
 .vt td,.vt th{padding:3px 6px;border-bottom:1px solid var(--line);text-align:right;background:none;position:static}
 .vt td:first-child,.vt th:first-child{text-align:left}
 a{color:var(--home)}
@@ -321,6 +322,10 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
 <div class="cards" id="cards"></div>
 <div class="empty" id="empty" hidden>Nothing to show with these filters.</div>
 
+<details class="help" id="b365">
+  <summary>bet365 log: corners &amp; cards<span id="b365sum"></span></summary>
+  <div id="b365body"></div>
+</details>
 <details class="help">
   <summary>What the columns mean</summary>
   <ul>
@@ -347,6 +352,8 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
         <li><b>Card</b>: Ian's Trading Card for today, with <b>GO / SKIP</b> from the card's check before kick-off. A skipped trade gets no in-play flags. In play the card's own minimum prices are used: O1.5 drip at 20', 27' and 35' (0-0 only), FH goal at 25' (0-0), late goal at 70', 75' and 80' (while there's been no goal since 70'). <b>Green up: X lead</b> = a Lead &amp; Green (or featured) team has gone ahead. <b>Take your liability out</b> = the first goal came after the drip's first entry. The card's record so far counts trades that &ldquo;landed&rdquo;, not profit.</li>
         <li><b>FTS entries</b>: FTS's trading-entry columns from the NewModel file, for every game they cover: 0-0 at 25' (FH goal), goal by 10' (2nd FH goal), 0-0 at 20' (a goal), goal after 70' and after 80'. Each chance becomes FTS's minimum price (100 &divide; chance). They're well calibrated, so they're fair prices, not an edge, and they picked games no better than the pre-match price did. So the board only flags one when Betfair beats both FTS's minimum and our own fair price. The <em>Entry</em> column shows them all.</li>
         <li><b>HT: no more goals</b>: at half-time, in one of 28 league &times; goals-at-HT combinations where the half-time market has over-priced second-half goals, back Under (goals + 0.5). Picked on past seasons and bet on the next one, it made +5.0% on 3,705 bets in 2024&ndash;26 (with shuffled leagues: &minus;1.1%, p &asymp; 0.005). This season so far it's &minus;10.9% on 445 bets, about 1.5 standard deviations below what's expected, which is still within normal swings. The price log is still checking that FTS's half-time price can really be had, so treat it as a candidate and stake small (0.25&ndash;0.5pt). The minimum shown is the break-even price at that combination's past rate. <b>Not flagged after a lively first half (16+ shots, both teams):</b> those games lost 10&ndash;24% a season. The flag shows the first-half shot count; &ldquo;shots ?&rdquo; means the live feed had none, so look before backing.</li>
+        <li><b>Lively half</b> (paper-trade): after a first half with 16+ shots between the teams the half-time market under-prices second-half goals. Three flags: <em>a goal</em> (16+ shots, Over goals + 0.5 at half-time: +3.2% on 2,250 bets, odds about 1.22), <em>2 more goals</em> (18+ shots, Over goals + 1.5: +4.5% on 988 bets, odds about 1.94, promising not proven) and <em>no goal since</em> (18+ shots and still the half-time score at 63&ndash;78': +3.6% on 552 bets, odds about 1.5, the weakest). No minimum price.</li>
+        <li><b>Corners &amp; cards: fair prices for bet365</b> (in a game's details at half-time): fair odds for match corner and yellow-card lines and for who wins the second-half corner count. The first half barely predicts the second-half totals; the league, the score and who the favourite is do. Press <em>Log</em> and type the bet365 price you took: the <em>bet365 log</em> under the table settles itself from the final counts while the game is still on the board (or use W / L), and <em>Download CSV</em> keeps it. Fair prices are not a tested edge.</li>
         <li><b>Angle</b> (league angles): moments where one league has beaten the board's own league-blind price since 2021, and kept doing so in the later seasons. Brazil 0-0 at 25' and Brazil / Poland 0-0 at 35' (first-half goal), a 1-goal lead at 70' (another goal: Bundesliga, Poland, Swiss, Ligue 1, Austria, Eredivisie, Premier League; no more goals: J-League, Championship), the Championship after 80' (no more goals), and the Bundesliga after 60' (2+ more goals). The angle's price is our chance plus that league's effect, shrunk towards zero so a small league doesn't stand out by luck. The flag shows only when Betfair is at or above it. Where we could check against real prices (at half-time), Betfair already allowed for about half of each league effect, so expect less than the history suggests. Each one is checked against the logged Betfair prices before it's trusted.</li>
         <li><b>Alerts</b>: choose <em>Alerts: ticked games</em> or <em>all games</em> for a beep (and a browser notification, if you allow it) when a flag turns &check; or a green-up comes, or <em>Alerts: setups</em> to beep only when one of the four setups lines up. Keep the page open. Every entry is saved, so we can check later whether they made money.</li>
       </ul></li>
@@ -364,7 +371,7 @@ footer{margin-top:22px;color:var(--ink3);font-size:12px}
 <footer id="foot">FTS &middot; in-play board &middot; live stats: SofaScore (unofficial) &middot; prices: your Betfair in-play log</footer>
 
 <script>
-window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "2.5.0", "cf": "https://fts-board.memongomemongo.workers.dev/board"};
+window.__BOARD = {"raw": "https://raw.githubusercontent.com/mongomongo/fts/board/board.json", "api": "https://api.github.com/repos/mongomongo/fts/contents/board.json?ref=board", "page": "2.6.0", "cf": "https://fts-board.memongomemongo.workers.dev/board"};
 (function(){
 'use strict';
 var CFG = window.__BOARD || {};
@@ -600,8 +607,14 @@ function mkLab(e){
 }
 // FTS's own entries: only when Betfair beats FTS's minimum AND our fair price; league angles: only at or above the angle's price
 // Ian v1 entries (board 2.9, src 'ian'): sent only while every rule is met; go = held for a minute
-function tsShow(e){ return !!(e.act || e.src==='card' || e.src==='ht' || e.src==='ian' || (e.src==='fts' && e.go && e.fo) || (e.src==='lg' && e.go)); }
-function tsName(e){ return e.src==='fts' ? 'FTS: '+e.nm : e.src==='lg' ? 'Angle: '+e.nm : e.src==='ht' && e.x ? e.nm+(e.x.sh!=null ? ' · '+e.x.sh+' shots' : ' · shots ?') : e.nm; }   // page 2.5: first-half shots on the HT flag
+function tsShow(e){ return !!(e.act || e.src==='card' || e.src==='ht' || e.src==='ian' || e.src==='lv' || (e.src==='fts' && e.go && e.fo) || (e.src==='lg' && e.go)); }
+function tsName(e){ return e.src==='fts' ? 'FTS: '+e.nm : e.src==='lg' ? 'Angle: '+e.nm : e.src==='lv' ? e.nm+(e.x && e.x.sh!=null ? ' · '+e.x.sh+' shots' : '')+' (paper)' : e.src==='ht' && e.x ? e.nm+(e.x.sh!=null ? ' · '+e.x.sh+' shots' : ' · shots ?') : e.nm; }   // page 2.5: first-half shots on the HT flag
+// ---------------------------------------------------------------- page 2.6: lively half (16+ / 18+ first-half shots)
+var LV_EV = {
+  lv1: "16+ first-half shots, back Over (goals + 0.5) at half-time: +3.2% (±0.9) on 2,250 bets at Betfair's traded price after commission, average odds 1.22, positive in all three seasons (2024-26).",
+  lv2: "18+ first-half shots, back Over (goals + 1.5) at half-time: +4.5% (±3.1) on 988 bets at Betfair's traded price, average odds 1.94; +4.5% (±2.6) on 1,333 at FTS's half-time price. Better with more shots (20+: about +9%). Promising, not proven.",
+  lv3: "18+ first-half shots and still the half-time score at 63-78': +3.6% (±3.0) on 552 bets, average odds 1.51. With 16-17 shots it was about level (+1.2% ±2.0 for all 16+). Waiting gets a better price but most of the edge has gone by then: the weakest of the three."
+};
 // ---------------------------------------------------------------- Ian v1 (In-Play Tool Strategies v1.0, Oct 2026)
 var IAN_EV = {
   i1: "Betfair history (2024-26, approx. shortlist, no live xG): -18.1% on 4,970 bets, negative in all three seasons; the 5%+ value rule picked worse bets than backing every shortlisted 0-0 at 2.00+ (-6.6%). Paper-trade it.",
@@ -671,6 +684,7 @@ function tsTip(e){
                       e.src==='lg' ? 'Angle price (our chance + this league\'s effect = '+e.pc+'%) ' : "Break-even at this cell's past rate ")+pr(e.mn);
   if(e.f) t += '\nOur fair price'+(e.src==='lg' ? ' (league-blind) ' : ' ')+pr(e.f);
   if(e.v!=null) t += '\nBetfair '+(e.v>=0?'+':'')+e.v+'% against the '+(e.src==='lg' ? 'angle price' : 'minimum');
+  if(e.src==='lv') t += '\n'+(LV_EV[e.id]||'')+'\nNo minimum price: it was tested at whatever Betfair was trading. Paper-trade it first.';
   if(e.src==='fts') t += '\nFTS entries are fair prices (calibrated), not a tested edge: flagged only when Betfair beats both prices';
   if(e.src==='lg' && e.x) t += '\nThis league at this moment: '+(e.x.d>0?'+':'')+e.x.d+' points over our league-blind chance (shrunk; '+e.x.mp+'% -> '+e.x.ap+'% in '+e.x.n+' games since 2021). Betfair may already price part of it: flagged only when it doesn\'t';
   if(e.x && e.src==='ht') t += '\nThis league with this many goals at HT: no 2nd-half goal '+e.x.act+'% vs '+e.x.imp+'% priced ('+e.x.n+' games). Candidate system, still being price-checked: stake small';
@@ -1198,8 +1212,116 @@ function detail(g){
   return '<div class="detgrid"><div><p class="dh">Momentum</p>'+mom+
     (bars ? '<p class="dh" style="margin-top:12px">'+esc(g.h)+' v '+esc(g.a)+'</p><div class="bars">'+bars+'</div>' : '')+
     '</div><div><p class="dh">Game</p><div class="kv">'+kv.map(function(p){ return '<span>'+p[0]+'</span><b class="num">'+p[1]+'</b>'; }).join('')+'</div>'+vt+
-    (ianOn(g) && !isFin(g) ? coverCalc(g) : '')+'</div></div>';
+    (ianOn(g) && !isFin(g) ? coverCalc(g) : '')+ccTable(g)+'</div></div>';
 }
+// ---------------------------------------------------------------- page 2.6: corners & cards fair prices + the bet365 log
+// g.cc (half-time only): c / y = {mu, n1, ln [[match line, 2nd-half k, chance % over, fair over, fair under]]},
+// fm = {fav, p [fav, tie, other], f, n, mu, c1}. Each price has a Log button: type the bet365 price you took (and a
+// stake if you like, "2.10 5"). The log lives in this browser (localStorage 'ipb365'); it settles itself from the
+// final corner / yellow counts while the game is still on the board, or with the W / L buttons; Download gives a CSV.
+var B365K = 'ipb365';
+function b365Load(){ try{ var a = JSON.parse(ls(B365K) || '[]'); return Array.isArray(a) ? a : []; }catch(e){ return []; } }
+function b365Save(a){ ls(B365K, JSON.stringify(a)); }
+function ccRows(g){
+  var cc = g.cc, rows = []; if(!cc) return rows;
+  var add = function(mk, side, line, k2, label, fair, p){ if(fair) rows.push({mk:mk, side:side, line:line, k2:k2, label:label, fair:fair, p:p}); };
+  if(cc.c) cc.c.ln.forEach(function(x){
+    add('c', 'o', x[0], x[1], 'Match corners Over '+x[0]+' ('+x[1]+'+ in the 2nd half)', x[3], x[2]);
+    add('c', 'u', x[0], x[1], 'Match corners Under '+x[0], x[4], Math.round((100-x[2])*10)/10);
+  });
+  if(cc.fm){
+    var fv = cc.fm.fav==='h' ? g.h : g.a, ot = cc.fm.fav==='h' ? g.a : g.h;
+    add('fm', 'fav', null, null, '2nd-half corners, most: '+fv, cc.fm.f[0], cc.fm.p[0]);
+    add('fm', 'tie', null, null, '2nd-half corners, most: tie', cc.fm.f[1], cc.fm.p[1]);
+    add('fm', 'oth', null, null, '2nd-half corners, most: '+ot, cc.fm.f[2], cc.fm.p[2]);
+  }
+  if(cc.y) cc.y.ln.forEach(function(x){
+    add('y', 'o', x[0], x[1], 'Match yellows Over '+x[0]+' ('+x[1]+'+ in the 2nd half)', x[3], x[2]);
+    add('y', 'u', x[0], x[1], 'Match yellows Under '+x[0], x[4], Math.round((100-x[2])*10)/10);
+  });
+  return rows;
+}
+function ccTable(g){
+  var rows = ccRows(g); if(!rows.length) return '';
+  var cc = g.cc, bits = [];
+  if(cc.c) bits.push('2nd-half corners expected '+f2(cc.c.mu)+' ('+cc.c.n1+' so far)');
+  if(cc.y) bits.push('2nd-half yellows expected '+f2(cc.y.mu)+' ('+cc.y.n1+' so far'+(cc.y.rc ? ', '+cc.y.rc+' red' : '')+')');
+  if(cc.ctx && cc.ctx.state) bits.push('favourite '+esc(cc.ctx.fav==='h'?g.h:g.a)+' is '+({trail:'behind', lead:'ahead', level:'level'})[cc.ctx.state]);
+  return '<p class="dh" style="margin-top:12px">Corners &amp; cards: fair prices for bet365</p><table class="vt num cct" data-cck="'+esc(g.k)+'"><tr><th>Market</th><th>Fair</th><th>Chance</th><th></th></tr>'+
+    rows.map(function(r, i){ return '<tr><td>'+esc(r.label)+'</td><td><b>'+pr(r.fair)+'</b></td><td>'+r.p+'%</td><td><button type="button" class="b365b" data-b365="'+i+'">Log</button></td></tr>'; }).join('')+
+    '</table><div class="sm" style="margin-top:4px">'+bits.join(' &middot; ')+'. Take a bet365 price only if it is clearly bigger than Fair, then press Log and type it. Yellows only: check how bet365 counts a red in its cards market. Fair prices from 19,529 games (2024-26), not a tested edge.</div>';
+}
+function b365Add(g, r, odds, stake){
+  var a = b365Load(), cc = g.cc || {};
+  a.push({id: Date.now()+'-'+Math.floor(Math.random()*1e4), t: new Date().toISOString(), k: g.k, h: g.h, a: g.a, lg: g.lg || '', mk: r.mk, side: r.side, line: r.line,
+          label: r.label, fair: r.fair, p: r.p, odds: odds, stake: stake || 1, sc: g.sc ? g.sc.join('-') : '', co: g.co || (cc.fm && cc.fm.c1) || null, yc: g.yc || null,
+          fav: cc.fm ? cc.fm.fav : null, res: null, pl: null});
+  b365Save(a); b365Draw();
+}
+function b365Parse(s){
+  var m = String(s==null?'':s).replace(/,/g, '.').trim().split(/[\s@x]+/).filter(Boolean), o = parseFloat(m[0]), st = m.length > 1 ? parseFloat(m[1]) : 1;
+  return (isFinite(o) && o > 1 && o < 1000 && isFinite(st) && st > 0) ? [o, st] : null;
+}
+function b365Result(e, g){            // 1 win, 0 lose, null can't tell yet
+  if(!g || !isFin(g)) return null;
+  var sum = function(v){ return v && v.length===2 && v[0]!=null && v[1]!=null ? (+v[0])+(+v[1]) : null; };
+  if(e.mk==='c'){ var c = sum(g.co); if(c==null) return null; return (e.side==='o' ? c > e.line : c < e.line) ? 1 : 0; }
+  if(e.mk==='y'){ var y = sum(g.yc); if(y==null) y = g.fo ? 0 : null; if(y==null) return null; return (e.side==='o' ? y > e.line : y < e.line) ? 1 : 0; }
+  if(e.mk==='fm'){
+    if(sum(g.co)==null || !e.co || e.co.length!==2 || !e.fav) return null;
+    var h2 = g.co[0]-e.co[0], a2 = g.co[1]-e.co[1], f = e.fav==='h' ? h2 : a2, o = e.fav==='h' ? a2 : h2;
+    if(f < 0 || o < 0) return null;
+    return (e.side==='fav' ? f > o : e.side==='tie' ? f === o : o > f) ? 1 : 0;
+  }
+  return null;
+}
+function b365SetRes(e, res){ e.res = res; e.pl = res==null ? null : Math.round((res ? (e.odds-1)*e.stake : -e.stake)*100)/100; }
+function b365Settle(){
+  var a = b365Load(), by = {}, ch = false;
+  ((BOARD && BOARD.games) || []).forEach(function(g){ by[g.k] = g; });
+  a.forEach(function(e){ if(e.res==null && !e.man){ var r = b365Result(e, by[e.k]); if(r!=null){ b365SetRes(e, r); ch = true; } } });
+  if(ch) b365Save(a);
+  return a;
+}
+function b365Csv(a){
+  var cols = ['t','h','a','lg','label','mk','side','line','fair','p','odds','stake','sc','res','pl'];
+  var q = function(v){ v = v==null ? '' : String(v); return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; };
+  return cols.join(',')+'\n'+a.map(function(e){ return cols.map(function(c){ return q(e[c]); }).join(','); }).join('\n')+'\n';
+}
+function b365Draw(){
+  var box = $('b365body'); if(!box) return;
+  var a = b365Settle(), done = a.filter(function(e){ return e.res!=null; });
+  var stk = done.reduce(function(s,e){ return s+e.stake; }, 0), pl = done.reduce(function(s,e){ return s+e.pl; }, 0);
+  var edge = a.length ? a.reduce(function(s,e){ return s+(e.odds-e.fair)/e.odds*100; }, 0)/a.length : 0;
+  $('b365sum').textContent = a.length ? ' · '+a.length+' logged, '+done.length+' settled'+(done.length ? ', P/L '+(pl>=0?'+':'')+pl.toFixed(2)+' ('+(pl>=0?'+':'')+(pl/stk*100).toFixed(1)+'%)' : '') : '';
+  if(!a.length){ box.innerHTML = '<p class="muted">Nothing logged yet. At half-time, open a game and press Log beside a corner or card price.</p>'; return; }
+  box.innerHTML = '<p class="sm">Average price against our fair when logged: '+(edge>=0?'+':'')+edge.toFixed(1)+'%. '+
+    '<button type="button" id="b365dl">Download CSV</button> <button type="button" id="b365clr">Clear settled</button></p>'+
+    '<table class="vt num"><tr><th>Game</th><th>Bet</th><th>Fair</th><th>bet365</th><th>Stake</th><th>Result</th><th></th></tr>'+
+    a.slice().reverse().map(function(e){
+      var v = (e.odds-e.fair)/e.odds*100;
+      return '<tr><td>'+esc(e.h)+' v '+esc(e.a)+'<br><span class="muted">'+esc(e.t.slice(0,16).replace('T',' '))+' &middot; '+esc(e.sc)+' at HT</span></td><td>'+esc(e.label)+'</td><td>'+pr(e.fair)+'</td><td><b>'+pr(e.odds)+'</b> <span class="muted">('+(v>=0?'+':'')+v.toFixed(0)+'%)</span></td><td>'+e.stake+'</td><td>'+
+        (e.res==null ? '<span class="muted">open</span>' : (e.res ? 'won ' : 'lost ')+(e.pl>=0?'+':'')+e.pl.toFixed(2))+'</td><td><button type="button" data-b365w="'+esc(e.id)+'" title="Mark as won">W</button> <button type="button" data-b365l="'+esc(e.id)+'" title="Mark as lost">L</button> <button type="button" data-b365x="'+esc(e.id)+'" title="Delete">&times;</button></td></tr>';
+    }).join('')+'</table>';
+}
+document.addEventListener('click', function(ev){
+  var t = ev.target, b = t.closest && t.closest('[data-b365]');
+  if(b){
+    var tb = b.closest('[data-cck]'), g = ((BOARD && BOARD.games) || []).filter(function(x){ return x.k===tb.getAttribute('data-cck'); })[0];
+    var r = g && ccRows(g)[+b.getAttribute('data-b365')]; if(!r) return;
+    var ans = window.prompt(r.label+'\nFair '+pr(r.fair)+'. bet365 price you took (add a stake if you like, e.g. "2.10 5"):', '');
+    if(ans==null) return;
+    var v = b365Parse(ans); if(!v){ window.alert('Not logged: type the price as a decimal, e.g. 2.10'); return; }
+    b365Add(g, r, v[0], v[1]); return;
+  }
+  var id, a;
+  if(t.id==='b365dl'){ a = b365Load(); var bl = new Blob([b365Csv(a)], {type:'text/csv'}), u = URL.createObjectURL(bl), l = document.createElement('a'); l.href = u; l.download = 'bet365_log_'+new Date().toISOString().slice(0,10)+'.csv'; document.body.appendChild(l); l.click(); l.remove(); setTimeout(function(){ URL.revokeObjectURL(u); }, 1000); return; }
+  if(t.id==='b365clr'){ if(window.confirm('Remove the settled bets from the log? Download the CSV first if you want to keep them.')){ b365Save(b365Load().filter(function(e){ return e.res==null; })); b365Draw(); } return; }
+  if(t.getAttribute && ((id = t.getAttribute('data-b365w')) || (id = t.getAttribute('data-b365l')))){
+    a = b365Load(); a.forEach(function(e){ if(e.id===id){ b365SetRes(e, t.hasAttribute('data-b365w') ? 1 : 0); e.man = 1; } }); b365Save(a); b365Draw(); return;
+  }
+  if(t.getAttribute && (id = t.getAttribute('data-b365x'))){ b365Save(b365Load().filter(function(e){ return e.id!==id; })); b365Draw(); }
+});
 function wireChart(root){
   var c = root.querySelector('.chart'); if(!c) return;
   var g = (BOARD.games||[]).filter(function(x){ return x.k===c.getAttribute('data-k'); })[0]; if(!g || !g.mom) return;
@@ -1294,6 +1416,7 @@ function stickify(){
 }
 function render(){
   var b = BOARD;
+  try{ b365Draw(); }catch(e){}                  // page 2.6: the bet365 log (settles from the board's final counts)
   if(!b){ $('upd').textContent = CFG.raw || new URLSearchParams(location.search).get('src') ? 'waiting for data…' : 'not configured'; return; }
   noteGoals();
   var gs = b.games || [];
