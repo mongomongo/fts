@@ -67,14 +67,14 @@ font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;vertical-align:
 .card[data-bet='x']{border-left:3px solid #7a3236}
 .legend{margin-top:6px}
 .legend .bet{margin:0 2px}
-</style></head><body><div class='wrap'><header><h1>FTS Running Order</h1><div class='sub'>2 selection(s) &middot; generated Mon 09 Nov 2026, 07:46</div></header><div class='bar'><div class='seg'><button data-view='left' class='on'>Left to play</button><button data-view='all'>All</button></div><div class='barinfo'><span id='counts'>&mdash;</span><span id='clock'></span><button id='refresh' title='Refresh now'>&#8635;</button></div></div><section class='group'><h2>FTS AI <span class='count'>2</span></h2><div class='dateblock' data-day='today'><div class='card' data-ko='1794247200000' data-fx='2026-11-09|kristiansund|valerenga' data-sel='2026-11-09|kristiansund|valerenga|ftsai|ftsaifhgo15' data-day='today'><div class='time'>18:00</div><div class='body'><div class='toprow'><span class='fixture'>Kristiansund v Valerenga</span><span class='status'><span class='score' hidden></span><span class='live' hidden><span class='dot'></span>LIVE</span><span class='when'></span></span></div><div class='league'>Norwegian Tippeligaen</div><div class='sel'><span class='badge'>FTS AI FHG O1.5</span><span class='bet' hidden></span></div><div class='meta'>odds 2.06</div><div class='goals' hidden></div></div></div><div class='card' data-ko='1794247200000' data-fx='2026-11-09|kristiansund|valerenga' data-sel='2026-11-09|kristiansund|valerenga|ftsai|ftsaiover25' data-day='today'><div class='time'>18:00</div><div class='body'><div class='toprow'><span class='fixture'>Kristiansund v Valerenga</span><span class='status'><span class='score' hidden></span><span class='live' hidden><span class='dot'></span>LIVE</span><span class='when'></span></span></div><div class='league'>Norwegian Tippeligaen</div><div class='sel'><span class='badge'>FTS AI Over 2.5</span><span class='bet' hidden></span></div><div class='meta'>odds 1.42</div><div class='goals' hidden></div></div></div></div></section><div id='liveempty' class='liveempty' hidden>Nothing left to play &mdash; today&rsquo;s selections are all done.</div><footer>FTS &middot; live running order &middot; updates when you open or refresh<div class='legend'><span class='bet' data-st='q'>&#10003;</span> qualified <span class='bet' data-st='x'>&#10007;</span> no bet &middot; checked at KO&minus;5 on the recorded prices against the systems.yaml bands</div></footer><script>window.__SCORES_URL="https://api.github.com/repos/mongomongo/fts/contents/scores.json?ref=scores";window.__BETS_URL=(window.__SCORES_URL||'').replace('scores.json','bets.json');window.__BETS_RAW=window.__SCORES_URL?(window.__SCORES_URL.replace('https://api.github.com/repos/','https://raw.githubusercontent.com/').replace('/contents/scores.json?ref=','/')+'/bets.json'):'';</script><script>
+</style></head><body><div class='wrap'><header><h1>FTS Running Order</h1><div class='sub'>1 selection(s) &middot; generated Fri 13 Nov 2026, 07:51</div></header><div class='bar'><div class='seg'><button data-view='left' class='on'>Left to play</button><button data-view='all'>All</button></div><div class='barinfo'><span id='counts'>&mdash;</span><span id='clock'></span><button id='refresh' title='Refresh now'>&#8635;</button></div></div><section class='group'><h2>FTS AI <span class='count'>1</span></h2><div class='dateblock' data-day='today'><div class='card' data-ko='1794598200000' data-fx='2026-11-13|leganes|burgos' data-sel='2026-11-13|leganes|burgos|ftsai|ftsaifhgo15' data-day='today'><div class='time'>19:30</div><div class='body'><div class='toprow'><span class='fixture'>Leganes v Burgos</span><span class='status'><span class='score' hidden></span><span class='live' hidden><span class='dot'></span>LIVE</span><span class='when'></span></span></div><div class='league'>Spanish Segunda Division</div><div class='sel'><span class='badge'>FTS AI FHG O1.5</span><span class='bet' hidden></span></div><div class='meta'>odds 3.5</div><div class='goals' hidden></div></div></div></div></section><div id='liveempty' class='liveempty' hidden>Nothing left to play &mdash; today&rsquo;s selections are all done.</div><footer>FTS &middot; live running order &middot; updates when you open or refresh<div class='legend'><span class='bet' data-st='q'>&#10003;</span> qualified <span class='bet' data-st='x'>&#10007;</span> no bet &middot; checked at KO&minus;5 on the recorded prices against the systems.yaml bands</div></footer><script>window.__SCORES_URL="https://api.github.com/repos/mongomongo/fts/contents/scores.json?ref=scores";window.__BETS_URL=(window.__SCORES_URL||'').replace('scores.json','bets.json');window.__BETS_RAW=window.__SCORES_URL?(window.__SCORES_URL.replace('https://api.github.com/repos/','https://raw.githubusercontent.com/').replace('/contents/scores.json?ref=','/')+'/bets.json'):'';</script><script>
 (function(){
   var INPLAY_MS = 130*60*1000;   // a match counts as 'in play' ~130 min after KO
   var view = 'left';
   var cards = [].slice.call(document.querySelectorAll('.card'));
   var SCORES = {};               // fx_key -> {h,a,st,min}
   var BETS = {};                 // betkey -> {side,st,price,size,profit}  (Betfair orders)
-  var QUAL = {};                 // betkey -> {st:q|x|np|nr, side, p, why, at, o25}  (recorded KO-5)
+  var QUAL = {};                 // betkey -> {st:q|x|np|nr, side, mk, p, why, at, o25}  (recorded KO-5)
   function nowMs(){
     try{ var p = new URLSearchParams(location.search).get('now');
       if(p){ var n = parseInt(p,10); if(!isNaN(n)) return n; } }catch(e){}
@@ -181,15 +181,25 @@ font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;vertical-align:
       if(betEl){
         if(qv && (qv.st==='q'||qv.st==='x'||qv.st==='np')){
           var txt;
+          // 9 Nov 2026: the pill names the bet's own market (qv.mk) - "BACK FH O1.5",
+          // never just the Over 2.5 steam-gate prices, which looked like the bet.
+          var gate = qv.o25 ? 'O2.5 steam '+qv.o25[0]+'→'+qv.o25[1] : '';
           if(qv.st==='q'){
-            txt = qv.p!=null ? '✓ '+esc((qv.side||'')+' '+qv.p)
-                : (qv.o25 ? '✓ O2.5 '+qv.o25[0]+'→'+qv.o25[1] : '✓ qualified');
+            if(qv.mk){
+              txt = '✓ '+esc((qv.side||'')+' '+qv.mk) + (qv.p!=null ? ' '+esc(qv.p) : '')
+                  + (qv.p==null && gate ? "<span class='why'>"+esc(gate)+"</span>" : '');
+            } else {                     // bets.json written before 9 Nov 2026 (no market name)
+              txt = qv.p!=null ? '✓ '+esc((qv.side||'')+' '+qv.p)
+                  : (qv.o25 ? '✓ O2.5 '+qv.o25[0]+'→'+qv.o25[1] : '✓ qualified');
+            }
           } else if(qv.st==='x'){
             txt = '✗ no bet'+(qv.why?"<span class='why'>"+esc(qv.why)+"</span>":'');
           } else txt = '– not recorded';
           var tip = (qv.st==='q'?'Qualified':qv.st==='x'?'Did not qualify':'No recorded price')
-                  + (qv.at?(' at '+qv.at):'') + ' (recorded KO-5 prices)'
-                  + (qv.why && qv.st!=='x' ? ' · '+qv.why : '')
+                  + (qv.mk ? ' · bet: '+(qv.side||'')+' '+qv.mk+(qv.p!=null?' @ '+qv.p:'') : '')
+                  + (qv.at?(' · KO-5 '+qv.at):'') + ' (recorded prices)'
+                  + (gate ? ' · '+gate : '')
+                  + (qv.why && qv.st!=='x' && qv.why!=='all bands ok' ? ' · '+qv.why : '')
                   + (bet && bet.price!=null ? ' · Betfair: '+(bet.side||'')+' '+bet.st+' @ '+bet.price : '');
           betEl.innerHTML=txt; betEl.title=tip;
           betEl.setAttribute('data-st', qv.st);
